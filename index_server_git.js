@@ -1,3 +1,4 @@
+//res.redirect('back');
 // Be sure to update the users array when changing user DB, e.g. pw change.
 // res.setHeader('Location', '/');
 // res.location('/customers/' + inst._id);
@@ -60,19 +61,22 @@ USERNAME = "crandall";
 // Initialize requires
 app = require("express")();
 bodyParser = require("body-parser");
-cookieParser = require('cookie-parser') ;
+busboy = require("connect-busboy"); 
+cookieParser = require("cookie-parser") ;
 Cookies = require("cookies"); 
 crypto = require("crypto"); // encryption
 express = require("express");
+//formidable = require("formidable"); 
 fs = require("fs"); // file system
 heredoc = require("heredoc");
 http = require("http");
 morgan = require("morgan");
-mysql = require('mysql'); // MySQL
+mysql = require("mysql"); // MySQL
 nodemailer = require("nodemailer"); // for sending email
 qs = require("querystring");
 url = require("url");
-utf8 = require('utf8'); // character encoding
+utf8 = require("utf8"); // character encoding
+util = require("util"); 
 var _ = require("underscore");
 //Cookies = require("../node_modules/cookies");
 //heredoc = require("../node_modules/heredoc");
@@ -96,6 +100,7 @@ console.log("cwd:" + process.cwd);
  * @private {string} [font_size="18"] Size of font in pixels.
  * @private {string} header User HTML header.
  * @private {string} help_html Help HTML text, also used on 404 page.
+ * @private {string} index_html Index HTML text.
  * @private {string} interests User interests and information.
  * @private {string} interests_position Position on home page of user interests and information.
  * @private {string} interests_width Width on home page of user interests and information.
@@ -127,6 +132,7 @@ console.log("cwd:" + process.cwd);
  * @private {number} [tweat_notify=0] Preference for receiving emails of Tweats posted by followed users, if any.
  * @private {number} [tweat_width=80] Maximum width in characters of Tweats on user's page.
  * @private {string} unsubscribe_password User password for unsubscribing.
+ * @private {string} upload_picture_html HTML for choosing an image to upload.
  * @private {string} user Signed-in user.
  * @private {string} user_name Username of signed-in user.
  * @private {string} user_rows Results from users database from sign-in.
@@ -142,7 +148,8 @@ followers_count = 0;
 font = "Helvetica";
 font_size = "18";
 header = "";
-help_html ="";
+help_html = "";
+index_html = "";
 interests = "";
 interests_position = "";
 interests_width = "";
@@ -174,6 +181,7 @@ tweat_list = "";
 tweat_notify = 0;
 tweat_width = 80;
 unsubscribe_password = "";
+upload_picture_html = "";
 user = "";
 user_name = "";
 user_rows = {0:{"interests":""}};
@@ -262,7 +270,40 @@ K8gt4JaF2vrvCRCBNQgBkmoWbO8irY0BEViHEKAotWhnLdBcEAjAeoQAABcLARACAC+EAAAhAEAI\
 ALwQAgCEAAAhAPBCCAAQAgCEAMALIQBACAAQAgAvhAAAIQBACAC8EAIAhADAjx//B5dJmJEF5LkZ\
 AAAAAElFTkSuQmCC" alt="Tweaty" style="float:left">';
 
-help_html = '<ul><li>To show a list of all users, just click the User Search button at the right.</li><li>The picture file upload function is temporarily disabled for security reasons.</li><li>Click your browser\'s Back button to go back to previous page(s).</li><li>To update your page or to remove red messages, click on Home at the top left<br />(or your browser\'s Refresh button).</li><li>Cookies and JavaScript must be enabled for some functions.</li><li>In a Boolean Search, at least the first term must be filled in.</li><li>Wildcards may be used in Hashtag Searches and Boolean Searches:<br /> ? for any one character, and * for any zero or more characters.</li><li>The Limit button at the right sets the number of Tweats shown and the number<br />of Search Results.</li><li>To turn on Chat Mode, click the green Start Chat button at the right.<br /> It will turn into a red Stop Chat button. In Chat Mode, the Tweats will be<br /> redisplayed every ten seconds, so any Tweats sent by someone<br /> you\'re following will appear automatically without having to click Home<br /> to reload the page. If the person you\'re following is also following you,<br /> and he\'s in Chat Mode, your new Tweats should appear automatically<br /> every ten seconds on his page as well, so you can have a real-time<br /> text conversation in Chat Mode. Actually, several people who are all following each other<br /> and are all in Chat Mode can have a multi-person conversation! In Chat Mode, any picture<br /> will be moved to the bottom of the page, and only the ten most recent Tweats are displayed.<br /> If you don\'t send a Tweat for five minutes, Chat Mode will be turned off automatically,<br /> and you would have to click Start Chat to restart it. Tweats sent in Chat Mode will be deleted<br /> automatically after 24 hours, so they can\'t have hashtags, and no email notifications<br /> are sent with these Tweats.</li><li>To post a picture by using a URL beginning with "http", type or paste it into the Tweat textbox,<br /> and then click the Pic button before pressing Enter.</li><li>To add a hashtag to a Tweat, just include the # sign followed by the hashtag,<br /> such as #popmusic (with no spaces between multiple words). Only one hashtag<br /> can be used in each Tweat, but you could post the same Tweat twice<br />with different hashtags, theoretically...</li></ul></body></html>';
+help_html = '<ul><li>To show a list of all users, just click the User Search button at the right.</li><li>Click your browser\'s Back button to go back to previous page(s).</li><li>To update your page or to remove red messages, click on Home at the top left<br />(or your browser\'s Refresh button).</li><li>Cookies and JavaScript must be enabled for some functions.</li><li>In a Boolean Search, at least the first term must be filled in.</li><li>Wildcards may be used in Hashtag Searches and Boolean Searches:<br /> ? for any one character, and * for any zero or more characters.</li><li>The Limit button at the right sets the number of Tweats shown and the number<br />of Search Results.</li><li>To turn on Chat Mode, click the green Start Chat button at the right.<br /> It will turn into a red Stop Chat button. In Chat Mode, the Tweats will be<br /> redisplayed every ten seconds, so any Tweats sent by someone<br /> you\'re following will appear automatically without having to click Home<br /> to reload the page. If the person you\'re following is also following you,<br /> and he\'s in Chat Mode, your new Tweats should appear automatically<br /> every ten seconds on his page as well, so you can have a real-time<br /> text conversation in Chat Mode. Actually, several people who are all following each other<br /> and are all in Chat Mode can have a multi-person conversation! In Chat Mode, any picture<br /> will be moved to the bottom of the page, and only the ten most recent Tweats are displayed.<br /> If you don\'t send a Tweat for five minutes, Chat Mode will be turned off automatically,<br /> and you would have to click Start Chat to restart it. Tweats sent in Chat Mode will be deleted<br /> automatically after 24 hours, so they can\'t have hashtags, and no email notifications<br /> are sent with these Tweats.</li><li>To post a picture by using a URL beginning with "http", type or paste it into the Tweat textbox,<br /> and then click the Pic button before pressing Enter.</li><li>To add a hashtag to a Tweat, just include the # sign followed by the hashtag,<br /> such as #popmusic (with no spaces between multiple words). Only one hashtag<br /> can be used in each Tweat, but you could post the same Tweat twice<br />with different hashtags, theoretically...</li></ul></body></html>';
+
+upload_picture_html = heredoc(function() {/*
+<!DOCTYPE html>
+<HTML>
+  <HEAD>
+    <TITLE>Tweater Picture File Upload</TITLE>
+    <STYLE>
+      .center {
+        margin-left: auto;
+        margin-right: auto;
+        width: 75%;
+        background-color: #00DD00;
+      }
+    </STYLE>
+  </HEAD>
+  <BODY style="background-color:#c0c0f0;padding:8px;font-family:Courier New, Helvetica};">
+    <DIV style="width:100%">
+      <DIV class="center">
+        <H1 class="center">Picture Upload:</H1>
+      </DIV>
+    </DIV>
+    <DIV class="center">
+    <img src="/users/tweatycamera.png" style="float:left;width:50%;height:50%" />
+      <FORM action="/user/upload_picture_uploading" method="post" enctype="multipart/form-data">
+        <H2>Select picture file to upload (only jpg, jpeg, gif and png image files are allowed, and the maximum file size is 1MB):</H2>
+        <INPUT type="file" name="file" id="file" size="70">
+        <INPUT type="submit" value="Upload Picture File" name="submit">
+        <INPUT type="button" value="Cancel" onclick="window.close();">
+      </FORM>
+    </DIV>
+  </BODY>
+</HTML>
+*/});
 
 index_html = heredoc(function() {/*
 <!DOCTYPE html>
@@ -299,7 +340,8 @@ function openit() {
 */});
 
 app.use(morgan('dev'));
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({extended: true, keepExtensions: true, uploadDir: __dirname + '/pictures' }));
+app.use(busboy({ highWaterMark: 2 * 1024 * 1024, limits: { fileSize: 10 * 1024 * 1024 } })); 
 app.use('/users', express.static('pictures')); // 2 static files paths, e.g. for images or CSS
 //app.use('/users/tweat_delete/*.png', express.static('pictures'));
 //app.use('/users/tweat_delete/*.jpg', express.static('pictures'));
@@ -323,7 +365,7 @@ app.get('/', function(req, res) { // Sign-In or Register Page
 console.log("sign/reg");
   cookies = new Cookies(req, res);
   if (cookies.get('user_name') && cookies.get('password')) {
-console.log(cookies.get('user_name'));
+console.log(cookies.get('user_name').replace("%40","@"));
 console.log(cookies.get('password'));
     var given_user_name = cookies.get('user_name').replace("%40","@");
     password = cookies.get('password').replace("%40","@");
@@ -392,12 +434,18 @@ console.log("success: true");
 console.log("users:" + us);
 });
 
-app.get('/users/delete_tweat/:tid', function(req, res) {
+app.get('/user/delete_tweat/:tid', function(req, res) {
   tid = req.params.tid;
 console.log("delete_tweat:" + tid);
   delete_tweat(req, res);
   message = "";
   return;
+});
+
+app.get('/user/help', function(req, res) {
+  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  res.end('<!DOCTYPE html><html><head><title>Tweater Help</title><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css"><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css"><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script><body style="background-color:#99D9EA;font-size:' + font_size + 'px"><div><a href="' + SELF_NAME + '" style="font-size:' + 
+bigfont + 'px;color:red;background-color:#990099"><b>&nbsp;Tweater Help&nbsp;</b></a></div><img src="/users/tweatyquestion.png" style="float:right" />' + help_html);
 });
 
 app.get('/users/:user_name', function(req, res) {
@@ -429,7 +477,23 @@ console.log("reason:" + result.reason);
 console.log("año."+tweats[22].tweat); */
 });
 
-app.post('/users/post_tweat', function(req, res) {
+app.get('/users/view_user_name/:user_name', function(req, res) {
+  user_name = req.params.user_name.toLowerCase().trim().replace(/\+/g, " ").replace(/\s+/g, " ").replace(/%40/g, "@").replace(/%2B/g, "+");
+console.log("view_user_name:" + user_name);
+});
+
+app.get('/user/upload_picture', function(req, res) {
+console.log("upload");
+  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  res.end(upload_picture_html);
+  return;
+});
+
+app.post('/user/upload_picture_uploading', function(req, res) {
+  upload_picture_uploading(req, res);
+});
+
+app.post('/user/post_tweat', function(req, res) {
   var tweat_post = req.body;
   tweat = tweat_post.tweat;
 
@@ -442,10 +506,10 @@ console.log('Tweat fd: ', tweat);
   return;
 });
 
-app.post('/users/signin', function(req, res) {
+app.post('/user/signin', function(req, res) {
   var given_user = req.body;
 console.log("user:", JSON.stringify(given_user));
-  given_user.user_name = given_user.user_name.trim().toLowerCase().replace(/\s+/g, " ");
+  given_user.user_name = given_user.user_name.trim().toLowerCase().replace(/\s+/g, " ").replace("%40","@");
   message = "";
   forgot_password = given_user.forgot_password;
 // Forgotten password, so email password reset code if email address exists or username appears to be email
@@ -461,7 +525,7 @@ console.log("forgot pw");
     message += "Error: Both the password and username are required. "
   }
   user_name = given_user.user_name;
-  password = given_user.password;
+  password = given_user.password.replace("%40","@");
   password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
   user = _.find(users, function(u) {
     return u.user_name == given_user.user_name;
@@ -513,7 +577,7 @@ console.log("forgot pw");
   return;
 });
 
-app.post('/users/new', function(req, res) {
+app.post('/user/new', function(req, res) {
   var user = req.body;
 console.log("user:", JSON.stringify(user));
 // *** Add only A-Z a-z 0-9 ' _ - . @ only chars allowed in un
@@ -568,7 +632,7 @@ console.log("given new un:" + user.user_name);
   users.push(user);
   user_name = user.user_name;
   name = user.name.trim().replace(/\+/g, " ").replace(/\s+/g, " ").replace(/%2B/g, "+");
-  password = user.new_user_password;
+  password = user.new_user_password.replace("%40","@");
   password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
   cookies = new Cookies(req, res);
   cookies.set('user_name', user_name, 0);
@@ -620,6 +684,26 @@ console.log("New user: " + user_name);
     }
   });
   return;
+});
+
+app.get('/:what', function(req, res) { // 404 Page not found
+  page_not_found_404(res);
+});
+
+app.get('/[^up].*', function(req, res) { // 404 Page not found
+  page_not_found_404(res);
+});
+
+app.get('/user/:what', function(req, res) { // 404 Page not found
+  page_not_found_404(res);
+});
+
+app.get('/users/:what', function(req, res) { // 404 Page not found
+  page_not_found_404(res);
+});
+
+app.get('/pictures/:what', function(req, res) { // 404 Page not found
+  page_not_found_404(res);
 });
 
 app.listen(port);
@@ -1275,7 +1359,7 @@ console.log("lim:" + shown_limit);
   // X button to delete Tweat
             tweat_list += "&nbsp;&nbsp;<img src='/users/xdel.png' style='position:relative;top:-1px' onclick='if " + 
   "(confirm(\"Are you sure you want to delete this Tweat?:  " + no_quote_tweat + 
-"...\")) {location.replace(\"/users/delete_tweat/" + tid + "\");}' />";
+"...\")) {location.replace(\"/user/delete_tweat/" + tid + "\");}' />";
           }
           tweat_list += "</p></div></div>";
         }
@@ -1433,14 +1517,13 @@ console.log("lim:" + shown_limit);
 '         date.setTime(date.getTime() - 7200);\n' + 
 '         document.cookie = "user_name=' + user_name + '; expires=" + date.toGMTString() + "; path=/";\n' + 
 '         document.cookie = "password=' + password + '; expires=" + date.toGMTString() + "; path=/";\n' + 
-'         window.location.replace("signout.html");\n' + 
+'         window.location.replace("/user/signout");\n' + 
 '       }\n' + 
 '   function unsubscribe() {\n' + 
 '     if (confirm("Are you sure you want to unsubscribe to Tweater and delete your account?")) {\n' + 
-'       staySignedIn();\n' + 
-'       var date = new Date();\n' + 
-'       date.setTime(date.getTime() + (86400 * 365 * 67));\n' + 
-'       document.cookie = "unsub=unsub; expires=" + date.toGMTString() + "; path=/";\n' + 
+'     document.cookie = "user_name=' + user_name + '";\n' + 
+'     document.cookie = "password=' + password + '";\n' + 
+'     window.location.replace("/user/unsubscribe");\n' + 
 '     }\n' + 
 '   }\n' + 
 '   function staySignedIn() {\n' + 
@@ -1454,13 +1537,13 @@ console.log("lim:" + shown_limit);
 '     alert("You will now remain signed in.");\n' + 
 '   }\n' + 
 '  function about() {\n' + 
-'    alert("Tweater is an app created by David K. Crandall, to show his programming skills using Node.js, ' + 
-'Express, MySQL, Bootstrap, Angular.js, jQuery, JavaScript, HTML5 and CSS3. The sourcecode is in this GitHub ' + 
-'repository:\\n\\nhttps:' + String.fromCharCode(8260, 8260) + 'github.com/davareno58/tweater_node\\n\\nNote:  ' + 
+'    alert("Tweater is an app created by David K. Crandall, \\nto show his programming skills using Node.js, ' + 
+'Express, MySQL, Bootstrap, Angular.js, jQuery, JavaScript, HTML5 and CSS3. The sourcecode \\nis in this GitHub ' + 
+'repository:\\n\\nhttps:' + String.fromCharCode(8260, 8260) + 'github.com/davareno58/tweaternode\\n\\nNote:  ' + 
 'The creator of this website doesn\'t assume responsibility for its usage by others.");' + 
 '  }\n' + 
 '   function contact() {\n' + 
-'  alert("David Crandall&apos;s email is crandadk@aol.com");\n' + 
+'  alert("David Crandall\'s email is crandadk@aol.com");\n' + 
 '   }\n' + 
 '   function textErase() { // Erase input fields\n' + 
 '     $("#tweat").val("");\n' + 
@@ -1683,7 +1766,7 @@ TWEATMAXSIZE + ' bytes.)"></input>' +
 '        </div>' + 
 '        <div class="col-md-9" style="background-color:#9999FF;margin-left: 0px;margin-right: 6px;' + 
 'border: 4px outset darkblue;padding:10px;height:259px;width:869px">' + 
-'        <form action="/users/post_tweat" method="POST" role="form" id="tweatform">' + 
+'        <form action="/user/post_tweat" method="POST" role="form" id="tweatform">' + 
 '        <span>' + 
 '        <div ng-app="">' + 
 '        <fieldset class="fieldset-auto-width" style="float:left">' + 
@@ -1830,22 +1913,22 @@ console.log("pic_position read:" + pic_position);
 'Home</a></li>' + 
 '      <li role="presentation"><button type="button" class="btn btn-info" style="height:54px;width:91px"' + 
 '        onclick="about();">About</button></li>' + 
-'      <li role="presentation" class="btn btn-success"><a href="upload_picture.html?return=' + ret + '" ' + 
+'      <li role="presentation" class="btn btn-success"><a href="/user/upload_picture" ' + 
 '        style="color:lightgray" target="_blank">Upload Picture</a></li>' + 
-'      <li role="presentation" class="btn btn-primary"><a href="' + SELF_NAME + '" ' + 
-'        onclick="staySignedInWithAlert();" style="color:lightgray">Remain Signed In</a></li>' + 
+'      <li role="presentation"><button type="button" class="btn btn-primary" style="height:54px;width:178px"' + 
+'        onclick="staySignedInWithAlert();">Remain Signed In</button></li>' + 
 '      <li role="presentation"><button type="button" class="btn btn-success" style="color:lightgray;' + 
 'width:104px;height:54px" onclick="contact();">Contact</button></li>' + 
-'      <li role="presentation" class="btn btn-warning"><a href="' + SELF_NAME + '" onclick="unsubscribe();">' + 
-'Unsubscribe</a></li>' + 
-'      <li role="presentation" class="btn btn-info" style="width:96px"><a href="help.html" target="_blank">' + 
+'      <li role="presentation"><button type="button" class="btn btn-warning" style="height:54px;width:126px"' + 
+'        onclick="unsubscribe();">Unsubscribe</button></li>' + 
+'      <li role="presentation" class="btn btn-info" style="width:96px"><a href="/user/help" target="_blank">' + 
 'Help</a></li>' + 
 '      <li role="presentation" class="btn btn-primary"><a onclick="settings();" style="color:lightgray">' + 
 'Settings</a></li>' + 
-'      <li role="presentation" class="btn btn-danger"><a href="signout.html" onclick="signOut();"' + 
+'      <li role="presentation" class="btn btn-danger"><a href="/user/signout" onclick="signOut();"' + 
 '        style="color:lightgray">Sign Out</a></li>' + 
 '     <li role="presentation" class="btn btn-info">' + 
-'        <a href="' + SELF_NAME + '?view_user_name=' + user_name + '" target="_blank">Public Page</a>' + 
+'        <a href="/users/view_user_name/' + user_name + '" target="_blank">Public Page</a>' + 
 '      </li>' + 
 '    </ul>' + 
 '</nav>';
@@ -1864,7 +1947,7 @@ console.log("pic_position read:" + pic_position);
 'width:104px;height:54px" onclick="contact();">Contact</button></li>' + 
 '      <li role="presentation" class="btn btn-warning"><a href="' + SELF_NAME + '" onclick="unsubscribe();">' + 
 'Unsubscribe</a></li>' + 
-'      <li role="presentation" class="btn btn-info" style="width:100px"><a href="help.html" target="_blank">' + 
+'      <li role="presentation" class="btn btn-info" style="width:100px"><a href="/user/help" target="_blank">' + 
 'Help</a></li>' + 
 '      <li role="presentation" class="btn btn-primary"><a onclick="settings();" style="color:lightgray">' + 
 'Settings</a></li>' + 
@@ -1890,7 +1973,7 @@ console.log("pic_position read:" + pic_position);
 'width:104px;height:54px" onclick="contact();">Contact</button></li>' + 
 '      <li role="presentation" class="btn btn-warning"><a href="' + SELF_NAME + '" onclick="unsubscribe();">' + 
 'Unsubscribe</a></li>' + 
-'      <li role="presentation" class="btn btn-info" style="width:100px"><a href="help.html" target="_blank">' + 
+'      <li role="presentation" class="btn btn-info" style="width:100px"><a href="/user/help" target="_blank">' + 
 'Help</a></li>' + 
 '      <li role="presentation" class="btn btn-primary"><a onclick="settings();" style="color:lightgray">' + 
 'Settings</a></li>' + 
@@ -1908,8 +1991,8 @@ function unsubscribe_processing () {
 /**
  * Process unsubscribe request.
  */
-  user_name = cookies.get('user_name').trim();
-  password = cookies.get('password').trim();
+  user_name = cookies.get('user_name').trim().replace("%40","@");
+  password = cookies.get('password').trim().replace("%40","@");
   password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
 
   var client = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
@@ -1941,8 +2024,8 @@ function sign_in_auto_get_credentials() {
  * Sign in automatically with credentials from cookies.
  */
   /*cookies.get('password').trim(); // most pw's:peter ***
-  user_name = cookies.get('user_name').trim();
-  password = cookies.get('password').trim();
+  user_name = cookies.get('user_name').trim().replace("%40","@");
+  password = cookies.get('password').trim().replace("%40","@");
 console.log("user_name cookie:" + cookies.get('user_name'));*/
 name = 'Peter Griffin'; // Testing creds ***
 user_name = 'petergriffin'; //cookies.get('user_name').trim();
@@ -2193,8 +2276,8 @@ function sign_in_manual_get_credentials() {
 /**
  * Sign in manually from POST data from Signin/Registration forms page.
  */
-  user_name = get_post("user_name");
-  password = get_post("password");
+  user_name = get_post("user_name").replace("%40","@");
+  password = get_post("password").replace("%40","@");
   stay_logged_in = get_post("stay_logged_in");
 // testing uname/pw **:
 //user_name = 'crandadk@aol.com'; //cookies.get('user_name').trim(); // Testing creds **
@@ -2385,9 +2468,9 @@ function password_reset(req, res) {
 
   console.log("processing forgotten pw");
     ret = query['return'];
-    user_name = get_post('given_user_name').trim();
+    user_name = get_post('given_user_name').trim().replace("%40","@");
     given_password_reset_code = crypto.createHmac("MD5", CRYPT_SALT).update(get_post('given_password_reset_code').trim()).digest("base64");
-    password = get_post('password').trim();
+    password = get_post('password').trim().replace("%40","@");
     console.log("reset:" + given_password_reset_code);
     password_confirm = get_post('password_confirm').trim();
     password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
@@ -2550,22 +2633,21 @@ console.log("msg:" + message);
 '  };' + 
 '  function about() {' + 
 '    alert("Tweater is an app created by David K. Crandall, to show his programming skills using Node.js, ' + 
-'Express, MySQL, Bootstrap, Angular.js, jQuery, JavaScript, HTML5 and CSS3. The sourcecode is in this GitHub ' + 
-'repository:\\n\\nhttps:' + String.fromCharCode(8260, 8260) + 'github.com/davareno58/tweater_node\\n\\nNote:  ' + 
+'Express, MySQL, Bootstrap, Angular.js, jQuery, JavaScript, HTML5 and CSS3. The sourcecode \\nis in this GitHub ' + 
+'repository:\\n\\nhttps:' + String.fromCharCode(8260, 8260) + 'github.com/davareno58/tweaternode\\n\\nNote:  ' + 
 'The creator of this website doesn\'t assume responsibility for its usage by others.");' + 
 '  };' + 
 '  function contact() {' + 
 '    alert("David Crandall\'s email is crandadk@aol.com");' + 
 '  };' + 
 '</SCRIPT>' + 
-'</head><body style="background-color:#99D9EA;padding:8px;font-family:' + font + '; font-size:' + font_size + 'px" onload="turingsetup();">' + 
-header + message + 
-'<div style="margin-left: auto; margin-right: auto;"><p style="text-align:center"><img src="/users/tweaty.png" style="width:15%;height:15%" />' + 
+'</head><body style="background-color:#99D9EA;padding:8px;font-family:' + font + '; font-size:' + font_size + 'px" onload="turingsetup();">' + message + 
+'<div style="margin-left: auto; margin-right: auto;"><p style="text-align:center"><img src="/users/tweaty.png" style="width:25%;height:25%" />' + 
 '<a href="' + SELF_NAME + '" style="font-size:72px;color:red;background-color:violet"><b>' + 
-'&nbsp;Tweater&nbsp;</b></a><img src="/users/tweatyleft.png" style="width:15%;height:15%" />' + 
+'&nbsp;Tweater&nbsp;</b></a><img src="/users/tweatyemail.png" style="width:25%;height:25%" />' + 
 '</p></div>' + 
 '<div style="margin-left: auto; margin-right: auto;position: relative;' + title_position + '">' + 
-'<form action="/users/signin" method="POST" id="action">' + 
+'<form action="/user/signin" method="POST" id="action">' + 
 '<span>' + 
 '<div>' + 
 '<fieldset class="fieldset-auto-width" style="float:left;background-color:#A0C0A0;' + sign_in_width + '">' + 
@@ -2587,7 +2669,7 @@ header + message +
 '<br /><br /><br /><br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + 
 'OR&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + 
 '</div>' + 
-'<form action="/users/new" method="POST" autocomplete="off">' + 
+'<form action="/user/new" method="POST" autocomplete="off">' + 
 '<span>' + 
 '<div>' + 
 '<fieldset class="fieldset-auto-width" style="float:left;background-color:#A0A0C0">' + 
@@ -2620,6 +2702,154 @@ header + message +
 '</html>'
   );
   message = "";
+}
+
+function upload_picture_uploading(req, res) {
+  cookies = new Cookies(req, res);
+  if (cookies.get('user_name') && cookies.get('password')) {
+    var given_user_name = cookies.get('user_name').replace("%40","@");
+    password = cookies.get('password').replace("%40","@");
+    password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+    user = _.find(users, function(u) {
+      return u.user_name == given_user_name;
+    });
+    if ((user) && (password_hash == user.password_hash)) {
+      user_name = user.user_name;
+      name = user.name;
+      id = user.id;
+      message = "";
+      error_sorry = "Sorry, there was an error uploading your picture file. ";
+    
+      if (cookies.get('font_size')) {
+        font_size = cookies.get('font_size');
+      } else {
+        font_size = FONTSIZE;
+      }
+      if (cookies.get('font_family')) {
+        font = cookies.get('font_family') + ", Helvetica";
+      } else {
+        font = "Helvetica";
+      }
+      var fstream;
+      req.pipe(req.busboy);
+      req.busboy.on('file', function (fieldname, file, filename, encoding, mimetype) {
+        console.log("Uploading: " + encoding + mimetype);
+        fstream = fs.createWriteStream(__dirname + '/pictures/tmp/' + filename);
+        file.pipe(fstream);
+        fstream.on('close', function () {
+          var  picture_ext = mimetype.substr(mimetype.lastIndexOf("/") + 1).toLowerCase();
+          if (picture_ext == "jpeg") {
+            picture_ext = "jpg";
+          }
+          var uploadOk = 0;
+console.log("picext" + picture_ext);
+  // Allow only certain file types
+          if ((mimetype != 'image/jpg') && (mimetype != 'image/jpeg') && (mimetype != 'image/png') && (mimetype != 'image/gif')) {
+            message = message + "Sorry, only .jpg, .jpeg, .png and .gif files are allowed. ";
+            uploadOk = 0;
+          }
+  /* // Check filesize
+        if (req.files.displayImage.size > 1048576) {
+            message = message + "Sorry, your picture file is too large. The limit is one megabyte (1048576 bytes). ";
+          uploadOk = 0;
+        } */
+          if ((!cookies.get('user_name')) || (!cookies.get('password'))) {
+            message = message + error_sorry;
+            uploadOk = 0;
+          } else {
+            user_name = cookies.get('user_name').trim().replace("%40","@");
+            password = cookies.get('password').trim();
+            password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+            uploadOk = 1;
+          }
+console.log("upldok" + uploadOk);
+
+  // Check whether uploadOk has been set to 0 by any error
+          if (uploadOk == 0) {
+            message = message + "Your picture file was not uploaded. ";
+    // If everything is ok, try to upload
+          } else {
+            var client = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
+            console.log("pwh: " + password_hash + user_name);
+
+            client.query("USE " + DATABASE_NAME);
+            client.query("SELECT * FROM " + DATABASE_TABLE + " WHERE (user_name = ?) and (binary " + 
+              "password_hash = ?)", [user_name, password_hash], function (err, results, fields) {
+              if (err) {
+                message = "ERROR: Picture file not uploaded! Sorry, but something went wrong.<br />" +  
+                  "You may try again. ";
+                    //throw err;
+              } else {
+                if (results) {
+                  if (results[0]['picture_ext']) {
+                    var old_filename = __dirname + "/pictures/" + results[0]['id'] + "." + results[0]['picture_ext'];
+                    fs.unlink(old_filename, function (err, results, fields) {
+                    });
+  console.log("deleting " + old_filename);
+                    var client2 = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
+                    client2.query("USE " + DATABASE_NAME);
+                    client2.query("UPDATE " + DATABASE_TABLE + " SET picture_ext = ? WHERE (user_name = ?) AND (binary" + 
+                      " password_hash = ?)", [picture_ext, user_name, password_hash], function (err2, results2, fields2) {
+                      if (err2) {
+                        message = "ERROR: Picture not uploaded! Sorry, but something went wrong.<br />" +  
+                          "You may try again. ";
+                          //throw err2;
+                      } else {
+  console.log("new picext: " + picture_ext);
+                        client2.end();
+                        user.picture_ext = picture_ext;
+                        fs.rename(__dirname + "/pictures/tmp/" + filename, __dirname + "/pictures/" + id + "." + picture_ext, function(err3) {
+                          if (err3) {
+                            message = message + error_sorry;
+                          } else {
+  console.log("renaming/moving: " + filename + " to " + id + "." + picture_ext);
+                            message = "Picture uploaded! To see the new picture, go back to your home page an" + 
+                              "d click on your browser's Refresh button or click on Home at the top left. Not" + 
+                              "e: You can also post URLs of pictures that start with \\\"http\\\". After typing o" + 
+                              "r pasting the URL in the Tweat textbox, click the Pic button and press Enter.";
+                            res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+                            res.end("<!DOCTYPE HTML><HTML><head><script>" + 
+                              "alert(\"" + message + "\"); window.close();</script></head><body></body></html>");
+                            //client.end();
+                            message = "";
+                            return;
+                          }
+                        });
+                      }
+                      if (message) {
+                        res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
+                        res.end("<!DOCTYPE HTML><HTML><head><script>" + 
+                          "alert(\"" + message + "\"); window.close();</script></head><body></body></html>");
+                        return;
+                      }
+  console.log("client2 ended. msg:" + message);
+                    });
+                  }
+                }
+              }
+              if (message) {
+                res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
+                res.end("<!DOCTYPE HTML><HTML><head><script>" + 
+                  "alert(\"" + message + "\"); window.close();</script></head><body></body></html>");
+              } else {
+                client.end();
+              }
+              return;
+            }); //
+          }
+        });
+      }); 
+    }
+      /*res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+      show_home_page(req, res);*/
+  } else {
+    message += "Sorry, there was an error uploading your picture file. ";
+    //res.redirect('back');
+  /*res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+    res.end("<!DOCTYPE HTML><HTML><head><script>alert(\"" + message + "\"); window.close();</script></head>" + 
+      "<body></body></html>");*/
+    return;
+  }
 }
 
 exports.start = start;
