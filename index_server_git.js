@@ -45,14 +45,14 @@ console.log(f.parse("hi there"));
  * @constant {string} USERNAME Database username.
  */
 
-CRYPT_SALT = "x";
+CRYPT_SALT = "pling515";
 DATABASE_HOST = '192.168.0.3';
 DATABASE_NAME = "my_crandall";
 DATABASE_TABLE = "users";
-EMAIL_PASSWORD = 'z'; // --*** Email password
+EMAIL_PASSWORD = '!tasbcit'; // --*** Email password
 FONTSIZE = "18"; // pixels
 MY_PATH = 'c:/users/dave/node/tweater_node';
-PASSWORD = 'y'; // --*** Database password
+PASSWORD = 'tasbcit'; // --*** Database password
 SELF_NAME = "/";
 SITE_ROOT = "/";
 TWEATMAXSIZE = "250"; // characters
@@ -83,8 +83,7 @@ var _ = require("underscore");
 //nodemailer = require("../node_modules/nodemailer"); // for sending email
 
 transporter = nodemailer.createTransport({ service: 'Gmail', auth: { user: 'davareno58@gmail.com', pass: EMAIL_PASSWORD } }); // ***
-console.log("argv:" + process.argv);
-console.log("cwd:" + process.cwd);
+console.log("argv:" + process.argv.toString());
 //parsedURL = {}; // not needed
 
 /**
@@ -123,6 +122,7 @@ console.log("cwd:" + process.cwd);
  * @private {string} ret Browser version.
  * @private {number} [shown_limit=50] Maximum number of Tweats and Search Results.
  * @private {string} sign_in_width Width of sign-in page.
+ * @private {string} signout_html HTML text showing signout.
  * @private {string} [status=0] Administrator status.
  * @private {string} stay_logged_in User preference for remaining signed in.
  * @private {string} [text_color="black"] Text color (black or white).
@@ -172,6 +172,7 @@ result = {};
 ret = ""; // browser version
 shown_limit = 50;
 sign_in_width = "";
+signout_html = "";
 stay_logged_in = "";
 status = "";
 text_color = "black";
@@ -286,16 +287,16 @@ upload_picture_html = heredoc(function() {/*
       }
     </STYLE>
   </HEAD>
-  <BODY style="background-color:#c0c0f0;padding:8px;font-family:Courier New, Helvetica};">
+  <BODY style="background-color:#00DD00;padding:8px;font-family:Courier New, Helvetica};">
     <DIV style="width:100%">
       <DIV class="center">
         <H1 class="center">Picture Upload:</H1>
       </DIV>
     </DIV>
     <DIV class="center">
-    <img src="/users/tweatycamera.png" style="float:left;width:50%;height:50%" />
+    <img src="/users/tweatycamera.png" style="float:left;width:50%;height:50%;margin-right:10px" />
       <FORM action="/user/upload_picture_uploading" method="post" enctype="multipart/form-data">
-        <H2>Select picture file to upload (only jpg, jpeg, gif and png image files are allowed, and the maximum file size is 1MB):</H2>
+        <H2>Please select a picture file to upload (only jpg, jpeg, gif and png image files are allowed, and the maximum file size is 1MB):</H2>
         <INPUT type="file" name="file" id="file" size="70">
         <INPUT type="submit" value="Upload Picture File" name="submit">
         <INPUT type="button" value="Cancel" onclick="window.close();">
@@ -339,6 +340,25 @@ function openit() {
 </HTML>
 */});
 
+signout_html = heredoc(function() {/*
+<!DOCTYPE html>
+<HTML>
+  <HEAD>
+    <TITLE>TWEATER SIGNOUT</TITLE>
+    <META NAME="description" CONTENT="Tweater Social Site"> 
+    <META NAME="keywords" CONTENT="tweater, social site, tweats">
+    <META http-equiv=Content-Type content='text/html; charset=UTF-8' />
+  </HEAD>
+  <BODY LINK="#C00000" VLINK="#800080" alink="#FFFF00" bgcolor="#99D9EA" onLoad="openit()">
+    <h1 style='text-align:center'>Tweater Signout:  You are now signed out. (Please close your browser for safety.)</h1>
+    <h2 style='text-align:center'>
+      <a href="/">Click here to sign in.</a>
+    </h2>
+    <img src='/users/tweaty.png' />
+  </BODY>
+</HTML>
+*/});
+
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({extended: true, keepExtensions: true, uploadDir: __dirname + '/pictures' }));
 app.use(busboy({ highWaterMark: 2 * 1024 * 1024, limits: { fileSize: 10 * 1024 * 1024 } })); 
@@ -364,9 +384,9 @@ client.query("SELECT * FROM " + DATABASE_TABLE, function (err, results, fields) 
 app.get('/', function(req, res) { // Sign-In or Register Page
 console.log("sign/reg");
   cookies = new Cookies(req, res);
+console.log("user_name:" + cookies.get('user_name'));
+console.log("pw:" + cookies.get('password'));
   if (cookies.get('user_name') && cookies.get('password')) {
-console.log(cookies.get('user_name').replace("%40","@"));
-console.log(cookies.get('password'));
     var given_user_name = cookies.get('user_name').replace("%40","@");
     password = cookies.get('password').replace("%40","@");
     ret = '_chrome'; // Chrome browser version
@@ -440,6 +460,14 @@ console.log("delete_tweat:" + tid);
   delete_tweat(req, res);
   message = "";
   return;
+});
+
+app.get('/user/signout', function(req, res) {
+  res.cookie('user_name', '');
+  res.cookie('password', '');
+  res.cookie('stay_logged_in', 'off');
+  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  res.end(signout_html);
 });
 
 app.get('/user/help', function(req, res) {
@@ -1515,8 +1543,9 @@ console.log("lim:" + shown_limit);
 '   function signOut() {\n' + 
 '         var date = new Date();\n' + 
 '         date.setTime(date.getTime() - 7200);\n' + 
-'         document.cookie = "user_name=' + user_name + '; expires=" + date.toGMTString() + "; path=/";\n' + 
-'         document.cookie = "password=' + password + '; expires=" + date.toGMTString() + "; path=/";\n' + 
+'         document.cookie = "user_name=; expires=" + date.toGMTString() + "; path=/";\n' + 
+'         document.cookie = "password=; expires=" + date.toGMTString() + "; path=/";\n' + 
+'         document.cookie = "stay_logged_in=off; expires=" + date.toGMTString() + "; path=/";\n' + 
 '         window.location.replace("/user/signout");\n' + 
 '       }\n' + 
 '   function unsubscribe() {\n' + 
@@ -1531,6 +1560,7 @@ console.log("lim:" + shown_limit);
 '     date.setTime(date.getTime() + (86400 * 365 * 67));\n' + 
 '     document.cookie = "user_name=' + user_name + '; expires=" + date.toGMTString() + "; path=/";\n' + 
 '     document.cookie = "password=' + password + '; expires=" + date.toGMTString() + "; path=/";\n' + 
+'     document.cookie = "stay_logged_in=on; expires=" + date.toGMTString() + "; path=/";\n' + 
 '   }\n' + 
 '   function staySignedInWithAlert() {\n' + 
 '     staySignedIn();\n' + 
@@ -1617,6 +1647,8 @@ console.log("lim:" + shown_limit);
 '       location.replace("' + SELF_NAME + '");\n' + 
 '     }\n' + 
 '   }\n' + 
+'// Package Installer Exercise, written in JavaScript by David K. Crandall, phone: 619-488-5971, email: davareno58@gmail.com\n'+
+'\n'+
 '   function tweatWidth() { // Change maximum width of Tweats display\n' + 
 '     var newwidth = prompt("Current width of Tweats display: ' + tweat_width + 
 ' characters. Enter desired width: ", "80");\n' + 
