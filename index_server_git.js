@@ -1,30 +1,5 @@
-//res.redirect('back');
-// Be sure to update the users array when changing user DB, e.g. pw change.
-// res.setHeader('Location', '/');
-// res.location('/customers/' + inst._id);
-
 // Express version of my Tweater app by David K. Crandall, (C) 2015.
-// --*** When registering, change whitespace in name to a single space with .replace(/\s+/g, " ").
-/* To put funcs in separate files:
-File: myfunc.js:
-//Myfunc constructor:
-var Myfunc = function() {
-};
-// Description here.
-Myfunc.prototype.parse = function(text) {
-...
-};
-module.exports = Myfunc;
-(end of file myfunc.js)
------------
-Used thus in another file:
-var Myfunc = require('./myfunc'); 
-var f = new Myfunc();
-console.log(f.parse("hi there")); 
-*/
 
-// fix utf8 encoding problem
-// Use JSDoc style comments:
 /**
  * @fileOverview Tweater Twitter-like social media application.
  * @version 2.0
@@ -278,7 +253,7 @@ K8gt4JaF2vrvCRCBNQgBkmoWbO8irY0BEViHEKAotWhnLdBcEAjAeoQAABcLARACAC+EAAAhAEAI\
 ALwQAgCEAAAhAPBCCAAQAgCEAMALIQBACAAQAgAvhAAAIQBACAC8EAIAhADAjx//B5dJmJEF5LkZ\
 AAAAAElFTkSuQmCC" alt="Tweaty" style="float:left">';
 
-help_html = '<ul><li>To show a list of all users, just click the User Search button at the right.</li><li>Click your browser\'s Back button to go back to previous page(s).</li><li>To update your page or to remove red messages, click on Home at the top left<br />(or your browser\'s Refresh button).</li><li>Cookies and JavaScript must be enabled for some functions.</li><li>In a Boolean Search, at least the first term must be filled in.</li><li>Wildcards may be used in Hashtag Searches and Boolean Searches:<br /> ? for any one character, and * for any zero or more characters.</li><li>The Limit button at the right sets the number of Tweats shown and the number<br />of Search Results.</li><li>To turn on Chat Mode, click the green Start Chat button at the right.<br /> It will turn into a red Stop Chat button. In Chat Mode, the Tweats will be<br /> redisplayed every ten seconds, so any Tweats sent by someone<br /> you\'re following will appear automatically without having to click Home<br /> to reload the page. If the person you\'re following is also following you,<br /> and he\'s in Chat Mode, your new Tweats should appear automatically<br /> every ten seconds on his page as well, so you can have a real-time<br /> text conversation in Chat Mode. Actually, several people who are all following each other<br /> and are all in Chat Mode can have a multi-person conversation! In Chat Mode, any picture<br /> will be moved to the bottom of the page, and only the ten most recent Tweats are displayed.<br /> If you don\'t send a Tweat for five minutes, Chat Mode will be turned off automatically,<br /> and you would have to click Start Chat to restart it. Tweats sent in Chat Mode will be deleted<br /> automatically after 24 hours, so they can\'t have hashtags, and no email notifications<br /> are sent with these Tweats.</li><li>To post a picture by using a URL beginning with "http", type or paste it into the Tweat textbox,<br /> and then click the Pic button before pressing Enter.</li><li>To add a hashtag to a Tweat, just include the # sign followed by the hashtag,<br /> such as #popmusic (with no spaces between multiple words). Only one hashtag<br /> can be used in each Tweat, but you could post the same Tweat twice<br />with different hashtags, theoretically...</li></ul></body></html>';
+help_html = '<ul><li>To show a list of all users, just click the User Search button at the right.</li><li>Click your browser\'s Back button to go back to previous page(s).</li><li>To update your page or to remove red messages, click on Home at the top left<br />(or your browser\'s Refresh button).</li><li>Cookies and JavaScript must be enabled for some functions.</li><li>The User Search searches for names, usernames, information and interests,<br />and has a limit of 10 search words per search.</li><li>In a Boolean Search, at least the first term must be filled in.</li><li>Wildcards may be used in Hashtag Searches and Boolean Searches:<br /> ? for any one character, and * for any zero or more characters.</li><li>The Limit button at the right sets the number of Tweats shown and the number<br />of Search Results.</li><li>To turn on Chat Mode, click the green Start Chat button at the right.<br /> It will turn into a red Stop Chat button. In Chat Mode, the Tweats will be<br /> redisplayed every ten seconds, so any Tweats sent by someone<br /> you\'re following will appear automatically without having to click Home<br /> to reload the page. If the person you\'re following is also following you,<br /> and he\'s in Chat Mode, your new Tweats should appear automatically<br /> every ten seconds on his page as well, so you can have a real-time<br /> text conversation in Chat Mode. Actually, several people who are all following each other<br /> and are all in Chat Mode can have a multi-person conversation! In Chat Mode, any picture<br /> will be moved to the bottom of the page, and only the ten most recent Tweats are displayed.<br /> If you don\'t send a Tweat for five minutes, Chat Mode will be turned off automatically,<br /> and you would have to click Start Chat to restart it. Tweats sent in Chat Mode will be deleted<br /> automatically after 24 hours, so they can\'t have hashtags, and no email notifications<br /> are sent with these Tweats.</li><li>To post a picture by using a URL beginning with "http", type or paste it into the Tweat textbox,<br /> and then click the Pic button before pressing Enter.</li><li>To add a hashtag to a Tweat, just include the # sign followed by the hashtag,<br /> such as #popmusic (with no spaces between multiple words). Only one hashtag<br /> can be used in each Tweat, but you could post the same Tweat twice<br />with different hashtags, theoretically...</li></ul></body></html>';
 
 upload_picture_html = heredoc(function() {/*
 <!DOCTYPE html>
@@ -370,6 +345,8 @@ app.use(morgan('dev')); // development tracing
 app.use(bodyParser.urlencoded({extended: true, keepExtensions: true, uploadDir: __dirname + '/pictures' }));
 app.use(busboy({ highWaterMark: 2 * 1024 * 1024, limits: { fileSize: 10 * 1024 * 1024 } })); 
 app.use('/users', express.static('pictures')); // 2 static files paths, e.g. for images or CSS
+app.use('/hashtag_search_results/*/*.png', express.static('pictures'));
+app.use('/user_search_results/*.png', express.static('pictures'));
 app.use('/*', express.static('pictures'));
 //app.use('/users/tweat_delete/*.jpg', express.static('pictures'));
 
@@ -414,14 +391,21 @@ console.log("pw:" + cookies.get('password'));
       name = user.name;
       if (stay_logged_in == "on") {
 // Set cookies to remain signed in.
+        //var date2 = new Date();
         var date2 = new Date();
-        res.cookie('user_name', user_name, {expires: (date2.getTime() + 86400000 * 365 * 67)});
-        res.cookie('password', password, {expires: (date2.getTime() + 86400000 * 365 * 67)});
+        date2.setTime(date2.getTime() + (86400000 * 365 * 67));
+        cookies.set('user_name', user_name, date2); // Set cookies to be deleted
+        cookies.set('password', password, date2);
+        //res.cookie('user_name', user_name, {expires: (date2.getTime() + 86400000 * 365 * 67)});
+        //res.cookie('password', password, {expires: (date2.getTime() + 86400000 * 365 * 67)});
       } else {
 // Set session cookies
-        var date3 = new Date();
-        res.cookie('user_name', user_name);
-        res.cookie('password', password);
+        cookies.set('user_name', user_name); // Set cookies to be deleted
+        cookies.set('password', password);
+
+        //var date3 = new Date();
+        //res.cookie('user_name', user_name);
+        //res.cookie('password', password);
 //res.cookie('chat', "false");
       }
       id = user.id;
@@ -431,7 +415,7 @@ console.log("pw:" + cookies.get('password'));
       } else {
         picture_url = "nophoto.jpg";
       }
-      interests = user.interests;
+      interests = user.interests || "";
       interests_words = user.interests_words;
       email = user.email;
       tweat_notify = user.tweat_notify;
@@ -530,7 +514,7 @@ console.log("chat iframe 1");
       res.write("<!DOCTYPE html><html><head><meta charset='utf-8' />" + refresh + "<title>Tweats:</title></head><body style='color:black;background-color:#c8bfe7;padding:8px;font-family:" + font + ";font-size:" + font_size + "px'>" + timeout_message + "<table>");
       timeout_message = "";
 //console.log("results:"+JSON.stringify(results));
-      if (results) {
+      if (results.length) {
         for (var row = 0; row < results.length; row++) {
           myrow = results[row];
           if (myrow['name']) {
@@ -563,7 +547,7 @@ console.log("chat iframe 1");
           }
           }
           res.write("<tr><td style='vertical-align:top;text-align:right'><b>" + 
-            wordwrap(myrow_name.replace(/%20/g, " "), 40, '<br />', true) + 
+            wordwrap(myrow_name.replace(/%20/g, " ").replace(/%2F/gi,"/"), 40, '<br />', true) + 
             "</b>:&nbsp;&nbsp;</td><td>" + 
             wordwrap(myrow_tweat.replace(/%20/g, " "), tweat_width, '<br />', true));
           if (myrow_name == name_shown) {
@@ -654,11 +638,6 @@ console.log("reason:" + result.reason);
 console.log("aÃ±o."+tweats[22].tweat); */
 });
 
-app.get('/view_user_name/:user_name', function(req, res) {
-  user_name = req.params.user_name.toLowerCase().trim().replace(/\+/g, " ").replace(/\s+/g, " ").replace(/%40/g, "@").replace(/%2B/g, "+");
-console.log("view_user_name:" + user_name);
-});
-
 app.get('/upload_picture', function(req, res) {
 console.log("upload");
   res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
@@ -690,7 +669,7 @@ console.log('Tweat fd: ', tweat);
 app.post('/user/signin', function(req, res) {
   var given_user = req.body;
 console.log("user:", JSON.stringify(given_user));
-  given_user.user_name = given_user.user_name.trim().toLowerCase().replace(/\s+/g, " ").replace("%40","@");
+  given_user.user_name = given_user.user_name.trim().toLowerCase().replace(/\s+/g, " ").replace("%40","@").replace(/\//g, "%2F");
   message = "";
   forgot_password = given_user.forgot_password;
 // Forgotten password, so email password reset code if email address exists or username appears to be email
@@ -706,7 +685,7 @@ console.log("forgot pw");
     message += "Error: Both the password and username are required. "
   }
   user_name = given_user.user_name;
-  password = given_user.password.replace("%40","@");
+  password = given_user.password.replace("%40","@").replace(/\//g, "%2F");
   password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
   user = _.find(users, function(u) {
     return u.user_name == given_user.user_name;
@@ -733,7 +712,8 @@ console.log("upwhash:"+user.password_hash);
   stay_logged_in = given_user.stay_logged_in;
   status = user.admin_status;
   name = user.name;
-  interests = user.interests;
+  interests = user.interests || "";
+console.log("interests:" + interests);
   cookies = new Cookies(req, res);
   if (stay_logged_in == "on") {
 // Set cookies to remain signed in.
@@ -758,8 +738,10 @@ console.log("upwhash:"+user.password_hash);
   email = user.email;
   tweat_notify = user.tweat_notify;
   res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
-  show_home_page(req, res);
-  return;
+  res.end("<!DOCTYPE html><html><head><title>Tweater</title><body onload=\"location.replace('/');\"><h1><b style='font-size:" + 
+    "72px;color:red;background-color:violet'>&nbsp;Tweater&nbsp;</b></h1><h1 style='text-align:center'>" +
+    "<a href='/' onclick=\"location.replace('/');\">If you're not redirected to Tweater in a few seconds" +
+    ", please click here.</a></h1></body></html>");
 });
 
 app.post("/info_update", function(req, res) {
@@ -782,7 +764,8 @@ console.log("updating interests of:" + cookies.get('user_name'));
     }
     row_interests = results8[0]['interests'] || "";
 
-    if (interests == "") { // No info given
+    if ((interests == "") || (!interests)) { // No info given
+      interests == "";
       interests_names = "  " + user_name + " " + name + " ";
       var client = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
       client.query("USE " + DATABASE_NAME);
@@ -951,8 +934,8 @@ app.post('/user/new', function(req, res) {
   var user = req.body;
 console.log("user:", JSON.stringify(user));
 // *** Add only A-Z a-z 0-9 ' _ - . @ only chars allowed in un
-  user.user_name = user.user_name.trim().toLowerCase().replace(/\s+/g, " ").replace("%40", "@");
-  user.name = user.name.trim().replace(/\s+/g, " ").replace("%40", "@");
+  user.user_name = user.user_name.trim().toLowerCase().replace(/\s+/g, " ").replace("%40", "@").replace(/\//g, "%2F");
+  user.name = user.name.trim().replace(/\s+/g, " ").replace("%40", "@").replace(/\//g, "%2F");
   message = "";
 console.log("given new un:" + user.user_name);
   if (!user.user_name || !user.name) {
@@ -1053,6 +1036,533 @@ console.log("New user: " + user_name);
     }
   });
   return;
+});
+
+app.get('/hashtag_search_results/:hashtag', function(req, res) {
+// Display Hashtag Search Results
+console.log("hashtag search:" + req.params.hashtag);
+  cookies = new Cookies(req, res);
+  if (cookies.get('font_size')) {
+    font_size = cookies.get('font_size');
+  } else {
+    font_size = FONTSIZE;
+  }
+  bigfont = font_size * 1.5;
+  
+  if (cookies.get('shown_limit')) {
+    shown_limit = cookies.get('shown_limit');
+  } else {
+    shown_limit = 50;
+  }
+  
+  if (cookies.get('font_family')) {
+    font = cookies.get('font_family') + ", Helvetica";
+  } else {
+    font = "Helvetica";
+  }
+  hashtag = req.params.hashtag;
+  hashtag_win = hashtag;
+  hashtag = hashtag.replace(/\*/g, "%");
+  hashtag = hashtag.replace(/\?/g, "_");
+  user_name = cookies.get('user_name').replace("%40","@");
+  password = cookies.get('password').replace("%40","@");
+  password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+  user = _.find(users, function(u) {
+    return u.user_name == user_name;
+  });
+  admin = false;
+  if (user) {
+    if (user.admin_status == 1) {
+      admin = true;
+    }
+  }
+  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  res.write("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Hashtag Search Results for " + 
+    hashtag_win + "</title><script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js'>" + 
+    "</script><script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js'></script>" + 
+    "<script><!--" + 
+    "(document).ready(function(){\n" + 
+    "  ('img').mousedown(function(){\n" +
+    "    (this).animate({opacity: '0.5'},100);\n" +
+    "  });\n" +
+    "});\n" +
+    "//--></script><style>.user{vertical-align:middle}</style>" +
+    "</head><body style='color:black;background-color:#C0C0F0;padding:8px;font-family:" + font + 
+    ";font-size:" + font_size + "px'>");
+  
+  if (!hashtag) {
+    res.end("<div style='color:red'>No hashtag was given to search for!</div></body></html>");
+    return;
+  } else {
+    var client = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
+    client.query("USE " + DATABASE_NAME);
+    client.query("SET NAMES 'utf8'");
+    if ((hashtag.indexOf("%") >= 0) || (hashtag.indexOf("_") >= 0)) {
+      var compare = "LIKE";
+    } else {
+      var compare = "=";
+    }
+    client.query("SELECT t.id, t.user_name, t.tweat, t.hashtag, u.name FROM tweats AS t " + 
+      "INNER JOIN users AS u ON t.user_name = u.user_name WHERE (t.hashtag " + compare + " ?) AND " + 
+        "(SUBSTRING(t.hashtag FROM 1 FOR 3) != 'DEL') ORDER BY t.id DESC LIMIT ?", [hashtag, parseInt(shown_limit)], function (err, results, fields) {
+      if (err) {
+        throw err;
+      }
+      if (!results) {
+        res.write("<p>No Tweats found with the hashtag \"" + hashtag_win + "\". <br />Are you sure you " +
+          "spelled it right? (Don't worry about capitalizing.) <br />You might try some other form " +
+          "of the word, such as a singular or plural.</p>");
+      } else {
+        var num_rows = results.length;
+        res.write("<h2>" + num_rows + " Hashtag Search Results for \"" + hashtag_win + "\"<br />" +
+        "(Note: Wildcards ? and * may be used):</h2><ul>");
+        for (ii = 0; ii < results.length; ii++) {
+          var vname = results[ii]['name'].replace(/%2F/gi,"/");
+          var vuname = results[ii]['user_name'].replace(/%2F/gi,"/");
+          var tweat = results[ii]['tweat'];
+          var tid = results[ii]['id'];
+          res.write("<li><img src='/users/follow.png' class='user' onclick='window.open(\"/follow/" + vuname + "/" + 
+            vname + "\");' />&nbsp;&nbsp;<a style='a:link{color:#000000};a:vlink{color:#990099};" + 
+            "a:alink{color:#999900};a:hlink{color:#000099};' href='/view_user_name/" + vuname + 
+            "/0' target='_blank'>" + vname + ":</a>&nbsp;&nbsp;" + tweat);
+
+// X button for administrator to delete Tweat
+          if (admin) {
+            var no_quote_tweat = tweat.substr(0,80).replace('"', ' ');
+            no_quote_tweat = no_quote_tweat.replace(/'/g, "&apos;");
+            no_quote_tweat = no_quote_tweat.replace(/"/g, "&apos;&apos;");
+            no_quote_tweat = no_quote_tweat.replace(/\t/g, " ");
+            no_quote_tweat = no_quote_tweat.replace(/\n/g, " ");
+            no_quote_tweat = no_quote_tweat.replace(/\r/g, " ");
+            no_quote_tweat = no_quote_tweat.replace(/\f/g, " ");
+            no_quote_tweat = no_quote_tweat.replace(/</g, "&lt;");
+            no_quote_tweat = no_quote_tweat.replace(/>/g, "&gt;");
+
+            res.write("&nbsp;&nbsp;<img src='/users/xdel.png' style='position:relative;top:7px' onclick='" + 
+              "if (confirm(\"Are you sure you want to delete this Tweat?:  " + no_quote_tweat + 
+              "...\")) {location.replace(\"/delete_tweat/" + tid + "\");}' />");
+          }
+          res.write("</li>");
+        }
+      }
+      client.end();
+      res.end("</ul></body></html>");
+    });  
+  }
+});
+
+app.post('/user_search_results', function(req, res) {
+// Search for other users by any information and interests
+  var search_any = req.body.search_any;
+console.log("user search");
+  cookies = new Cookies(req, res);
+  if (cookies.get('font_size')) {
+    font_size = cookies.get('font_size');
+  } else {
+    font_size = FONTSIZE;
+  }
+  bigfont = font_size * 1.5;
+  
+  if (cookies.get('shown_limit')) {
+    shown_limit = cookies.get('shown_limit');
+  } else {
+    shown_limit = 50;
+  }
+  
+  if (cookies.get('font_family')) {
+    font = cookies.get('font_family') + ", Helvetica";
+  } else {
+    font = "Helvetica";
+  }
+  user_name = cookies.get('user_name').replace("%40","@");
+  password = cookies.get('password').replace("%40","@");
+  password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+  user = _.find(users, function(u) {
+    return ((u.user_name == user_name) && (u.password_hash == password_hash));
+  });
+  admin = false;
+  if (user) {
+    if (user.admin_status == 1) {
+      admin = true;
+    }
+  }
+  if ((search_any == "") || (!search_any)) {
+    all_users_display(req, res);
+    return;
+  }
+  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  res.write("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>User Search Results</title>" +
+    "<script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js'></script>" +
+    "<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js'></script>" +
+    "<script><!--" +
+    "(document).ready(function(){\n" +
+      "('img').mousedown(function(){\n" +
+        "(this).animate({opacity: '0.5'},100);\n" +
+    "  });\n" +
+    "});\n" +
+    "//--></script>\n" +
+    "<style>.user{vertical-align:middle}</style></head><body style='color:black;background-color:#C0C0F0;" + 
+    "padding:8px;font-family:" + font + ";font-size:" + font_size + "px'><h2>User Interests and Information " + 
+    "Search Results (Limit " + shown_limit + "):</h2><ul>");
+
+  //search_any = search_any.replace(/\*/g, "%");
+  //search_any = search_any.replace(/\?/g, "_");
+  search_any = search_any.toLowerCase().substr(0,250).replace("-", " ");
+  search_any = strtran(search_any, ',;+&/', '     ').trim();
+  search_any = search_any.replace(/ +/g, " ");
+  search_any_array = search_any.split(" ");
+// Create array of unique search terms
+  search_any_array = search_any_array.filter(function(item, i, ar){return ar.indexOf(item) === i;});
+console.log("search array:"+search_any_array.join(","));
+  search_any = "  " + search_any + " ";
+  if (search_any_array.length > 10) {
+    res.end("Sorry, there's a limit of 10 search words!</body></html>");
+    return;
+  }
+  var client = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
+  client.query("USE " + DATABASE_NAME);
+  client.query("SET NAMES 'utf8'");
+  var report_count = 0;
+  var terms_found_count = 0;
+  var cases_count = 0;
+  var all_items = "";
+  var not_found = false;
+  for (var search_item in search_any_array) {
+console.log("search:"+search_any_array[search_item]);
+    all_items += " / " + search_any_array[search_item];
+    client.query("SELECT i.id, i.user_name, i.interest, u.name, u.id as uid FROM interests AS i " +
+      "INNER JOIN users AS u ON i.user_name = u.user_name WHERE i.interest = ? " + 
+      "ORDER BY i.interest LIMIT ?", [search_any_array[search_item], parseInt(shown_limit)], function (err, results, fields) {
+      if (err) {
+        report_count += 1;
+        throw err;
+      } else {
+        if (results.length) {
+          terms_found_count++;
+          res.write("<h3>Search Word \"" + search_any_array[report_count] + "\":</h3>");
+          var sublist_count = 0;
+          for (var myrow = 0; myrow < results.length; myrow ++) {
+            vname = results[myrow]['name'].replace(/%2F/gi,"/");
+            vuname = results[myrow]['user_name'].replace(/%2F/gi,"/");
+            uid = results[myrow]['uid'];
+            if (user_name != vuname) {
+              sublist_count++;
+              cases_count++;
+              res.write("<li><img src='/users/follow.png' class='user' onclick='window.open(\"/follow/" + vuname + 
+                "/" + vname + "\");' />&nbsp;&nbsp;<img src='/users/unfollow.png' class='user' onclick='" +
+                "window.open(\"/unfollow/" + vuname + "/" + vname + "\");' />&nbsp;&nbsp;" +
+                "<a style='a:link{color:#000000};a:vlink{color:#990099};a:alink{color:#999900};" +
+                "a:hlink{color:#000099};' href='/view_user_name/" + vuname + "/0' target='_blank'>" + vname +
+                " (Username: " + vuname + ")</a>");
+// X button for administrator to delete Tweat
+              if (admin) {
+                res.write("&nbsp;&nbsp;<img src='/users/xdel.png' class='user' onclick='if (confirm(\"Are you sure " +
+                  "you want to delete this user?:  " + vname + " (Username: " + vuname + "; User ID: " +
+                  uid + ")\")) {window.open(\"/delete_listed_user/" + uid + "/" + vuname + "\")}' />");
+              }
+              res.write("</li>");
+            }
+          }
+          res.write("<br />Total users with \"" + search_any_array[report_count] + "\":  " + sublist_count);
+        } else {
+          not_found = true;
+          res.write("<h3>Search word \"" + search_any_array[report_count] + "\":  Not found.</h3>");
+        }
+      }
+      if ((all_items.indexOf("?") != -1) || (all_items.indexOf("*") != -1)) {
+        res.write("<br />Note:&nbsp;&nbsp;The wildcards ? and * can only be used in Hashtag and Boolean " + 
+          "Searches.<br />In a normal User Search like this one, the ? and * have their literal values,<br />" + 
+          "since some search terms may include them.<br /><br />");
+      }
+      report_count += 1;
+      if (report_count == search_any_array.length) {
+        if (terms_found_count == 0) {
+          res.write("None of the given words were found:<br />" + search_any + "<br /><br />You may want to " + 
+          "check your spelling, or use other forms of the words,<br />such as singulars or plurals. (Don't " + 
+          "worry about capitalizing.)");
+        } else {
+          res.write("<br /><br />Total cases found:  " + cases_count);
+          res.write("<br />Total terms found:  " + terms_found_count);
+          if (not_found) {
+            res.write("<br />Note: If a given word was not found, you may want to check your spelling, or use " + 
+              "another form of the word,<br />such as a singular or a plural. (Don't worry about capitalizing.)");
+          }
+        }
+        res.end("</ul><br /><br /></body></html>");  
+        client.end();
+      }
+    });
+  }
+});
+
+app.post('/boolean_search_results', function(req, res) {
+// Search for other users by any information and interests using a boolean search with at most two search terms connected by AND, OR or NOT
+  cookies = new Cookies(req, res);
+  if (cookies.get('font_size')) {
+    font_size = cookies.get('font_size');
+  } else {
+    font_size = FONTSIZE;
+  }
+  bigfont = font_size * 1.5;
+  
+  if (cookies.get('shown_limit')) {
+    shown_limit = cookies.get('shown_limit');
+  } else {
+    shown_limit = 50;
+  }
+  
+  if (cookies.get('font_family')) {
+    font = cookies.get('font_family') + ", Helvetica";
+  } else {
+    font = "Helvetica";
+  }
+
+  user_name = cookies.get('user_name').replace("%40","@");
+  password = cookies.get('password').replace("%40","@");
+  password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+  user = _.find(users, function(u) {
+    return u.user_name == user_name;
+  });
+  admin = false;
+  if (user) {
+    if (user.admin_status == 1) {
+      admin = true;
+    }
+  }
+
+  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  res.write("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Boolean Search Results</title>" +
+    "<script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js'></script>" +
+    "<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js'></script>" +
+    "<script><!--" +
+    "(document).ready(function(){\n" +
+      "('img').mousedown(function(){\n" +
+        "(this).animate({opacity: '0.5'},100);\n" +
+    "  });\n" +
+    "});\n" +
+    "//--></script>\n" +
+    "<style>.user{vertical-align:middle}</style></head><body style='color:black;background-color:#C0C0F0;" + 
+    "padding:8px;font-family:" + font + ";font-size:" + font_size + "px'><h2>User Interests and Information " + 
+    "Boolean Search Results (Limit " + shown_limit + "):</h2><ul>");
+  
+  var search_one = req.body.search_one;
+  var search_two = req.body.search_two;
+  var search_type = req.body.search_type;
+
+  if ((search_type == "") || (!search_type)) {
+    search_type = "AND";
+  }
+  if (!search_one) {
+    search_one = "";
+  } else {
+    var search_one_win = search_one.replace(/\*/g, "%").replace(/\?/g, "_");
+  }
+  if (!search_two) {
+    search_two = "";
+    var search_two_win = "";
+  } else {
+    var search_two_win = search_two.replace(/\*/g, "%").replace(/\?/g, "_");
+  }
+
+  if (search_one == "") {
+    res.end("<p style='color:red'>Error:  At least the first search term must be given for a Boolean Search." + 
+      "</p></body></html>");
+    return;
+  }
+  search_one = search_one.substr(0,250).toLowerCase().replace(/-+/g, " ");
+  search_one = strtran(search_one, '_%?*', '  _%');
+  search_one = strtran(search_one.trim(), '"(),-/:;<=>[]!^\`{|}~¡¦©«¬­®¯´¶¸»¿', '                        ' + 
+    '                  ');
+  search_one = search_one.replace(/ +/g, " ");
+  var search_one_wild = strtran(search_one, '_%', '?*');
+  search_one = "% " + search_one + " %";
+
+  if (search_two != "") {
+    search_two = search_two.substr(0,250).toLowerCase().replace(/-+/g, " ");
+    search_two = strtran(search_two, '_%?*', '  _%');
+    search_two = strtran(search_two.trim(), '"(),-/:;<=>[]!^\`{|}~¡¦©«¬­®¯´¶¸»¿', '                        ' + 
+      '                  ');
+    search_two = search_two.replace(/ +/g, " ");
+    var search_two_wild = strtran(search_two, '_%', '?*');
+    search_two = "% " + search_two + " %";
+  } else {
+    var search_two_wild  = "";
+  }
+      
+  var client = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
+  client.query("USE " + DATABASE_NAME);
+  client.query("SET NAMES 'utf8'");
+  if (search_two == "") {
+    var boolean_query = "SELECT name, user_name, id as uid FROM users WHERE (interests_words LIKE ?) " + 
+      "AND (user_name != ?) ORDER BY ? LIMIT ?";
+    var boolean_query_params = new Array(search_one, user_name, search_one, parseInt(shown_limit));
+  } else if (search_type == "NOT") {
+    var boolean_query = "SELECT name, user_name, id as uid FROM users WHERE ((interests_words LIKE ?) " + 
+      "AND (interests_words NOT LIKE ?)) AND (user_name != ?) ORDER BY ? LIMIT ?";
+    var boolean_query_params = new Array(search_one, search_two, user_name, search_one, parseInt(shown_limit));
+  } else {
+    var boolean_query = "SELECT name, user_name, id as uid FROM users WHERE ((interests_words LIKE ?) " + 
+      search_type + " (interests_words LIKE ?)) AND (user_name != ?) ORDER BY ? LIMIT ?";
+    var boolean_query_params = new Array(search_one, search_two, user_name, search_one, parseInt(shown_limit));
+  }
+
+  client.query(boolean_query, boolean_query_params, function (err, results, fields) {
+    if (err) {
+      throw err;
+      return;
+    } else {
+      if (!results.length) {
+        res.end("<h2>No users found with given search term(s): " + search_one_wild + " " + search_type + " " + 
+          search_two_wild + "<br />You may want to check your spelling, or use other forms<br />of the words, " + 
+          "such as singulars or plurals. (Don't worry about capitalizing.)</h2></body></html>");
+        client.end();
+        return;
+      }
+
+      var num_rows = results.length;
+      if (search_one != search_two) {
+        res.write("<h2>" + num_rows + " Boolean Interests and Information Search Results (Limit " + shown_limit +
+          ") for \"" + search_one_wild + "\" " + search_type + " \"" + search_two_wild + "\" <br />(Note: " + 
+          "Wildcards ? and * may be used):</h2><br /><ul>");
+      } else {
+        res.write("<h2>" + num_rows + " Boolean Interests and Information Search Results (Limit " + shown_limit + 
+          ") for \"" + search_one_wild + "\" <br />(Note: Wildcards ? and * may be used):</h2><br /><ul>");    
+      }
+    
+      for (var myrow = 0; myrow < results.length; myrow ++) {
+        vname = results[myrow]['name'].replace(/%2F/gi,"/");
+        vuname = results[myrow]['user_name'].replace(/%2F/gi,"/");
+        uid = results[myrow]['uid'];
+        if (user_name != vuname) {
+          res.write("<li><img src='/users/follow.png' class='user' onclick='window.open(\"/follow/" + vuname + 
+            "/" + vname + "\");' />&nbsp;&nbsp;<img src='/users/unfollow.png' class='user' onclick='" +
+            "window.open(\"/unfollow/" + vuname + "/" + vname + "\");' />&nbsp;&nbsp;" +
+            "<a style='a:link{color:#000000};a:vlink{color:#990099};a:alink{color:#999900};" +
+            "a:hlink{color:#000099};' href='/view_user_name/" + vuname + "/0' target='_blank'>" + vname +
+            " (Username: " + vuname + ")</a>");
+// X button for administrator to delete Tweat
+          if (admin) {
+            res.write("&nbsp;&nbsp;<img src='/users/xdel.png' class='user' onclick='if (confirm(\"Are you sure " +
+              "you want to delete this user?:  " + vname + " (Username: " + vuname + "; User ID: " +
+              uid + ")\")) {window.open(\"/delete_listed_user/" + uid + "/" + vuname + "\")}' />");
+          }
+          res.write("</li>");
+        }
+      }
+    }
+    res.end("</ul><br /><br /></body></html>");  
+    client.end();
+  });
+});
+
+app.get('/view_user_name/:user_name/:status', function(req, res) {
+// Show some chosen user's Public Page (profile)
+  cookies = new Cookies(req, res);
+  if (cookies.get('font_size')) {
+    font_size = cookies.get('font_size');
+  } else {
+    font_size = FONTSIZE;
+  }
+  bigfont = font_size * 1.5;
+  
+  if (cookies.get('shown_limit')) {
+    shown_limit = cookies.get('shown_limit');
+  } else {
+    shown_limit = 50;
+  }
+  
+  if (cookies.get('font_family')) {
+    font = cookies.get('font_family') + ", Helvetica";
+  } else {
+    font = "Helvetica";
+  }
+
+  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  var view_user_name = req.params.user_name;
+  var view_admin = (req.params.status == "1");
+  if ((!view_user_name) || (view_user_name == "")) {
+    view_name = "Nobody";
+    view_user_name = "Not much to see here!";
+    res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>" + view_name + "'s Tweater Page " + 
+      "(Username: " + view_user_name + ")</title></head><body style='background-color:#99D9EA;padding:8px;" + 
+      "font-family:" + font + ";font-size:" + font_size + "px'>Sorry, something went wrong!</body></html>");
+    return;
+  }
+  view_user_name = view_user_name.toLowerCase().trim().replace(/\+/g, " ").replace(/\s+/g, " ").replace(/%40/g, "@").replace(/%2B/g, "+");
+
+  var client = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
+  client.query("USE " + DATABASE_NAME);
+  client.query("SET NAMES 'utf8'");
+  client.query("SELECT * FROM " + DATABASE_TABLE + " WHERE (user_name = ?) LIMIT 1", [view_user_name], function (err, results, fields) {
+    if (err) {
+      //client.end();
+      throw err;
+    } else {
+      if (results.length) {
+        var view_name = results[0]['name'];
+        var view_interests = results[0]['interests'] || "";
+        if ((!results[0]['picture_ext']) || (results[0]['picture_ext'] == "")) {
+          picture_url = "nophoto.jpg";
+        } else {
+          picture_url = results[0]['id'] + "." + results[0]['picture_ext'];
+        }
+        
+        res.write("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>" + view_name + 
+          "'s Tweater Page (Username: " + view_user_name + ")</title>" +
+"    <link rel='shortcut icon' href='/users/favicon.png' type='image/png'>" + 
+"    <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css'>" + 
+"    <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css'>" + 
+"    <script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js'></script>" + 
+"</head><body style='background-color:" + 
+          "#99D9EA;padding:8px;font-family:" + font + ";font-size:" + font_size + "px'><h1><a href='/' " + 
+          "style='font-size:" + bigfont + "px;color:red;background-color:violet'><b>&nbsp;&nbsp;&nbsp;Tweater" + 
+          "&nbsp;&nbsp;&nbsp;</b></a><br /><br /><div style='text-shadow: 5px 5px 5px #007F00;'>" + view_name + "'s " + 
+          "Tweater Page (" + view_user_name + ")&nbsp;&nbsp;<button type='button' class='btn btn-success' " +
+          "onclick=\"location.replace('/follow/" + view_user_name + "/" + view_name + "');\">Follow</button>&nbsp;" + 
+          "<button type='button' class='btn btn-danger' onclick=\"location.replace('/unfollow/" + view_user_name + 
+          "/" + view_name + "');\">Unfollow</button></div></h1><br /><b>Interests and Information:&nbsp;&nbsp;" +
+          "</b>" + view_interests + "<br /><br /><img id='picture' src='/users/" + picture_url + "' /><br />" + 
+          "<br /><b>Tweats:</b><br /><br />");
+  
+        var client2 = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
+        client2.query("USE " + DATABASE_NAME);
+        client2.query("SET NAMES 'utf8'");
+        client2.query("SELECT t.id as tid, t.user_name, t.tweat, u.id, u.name, u.picture_ext " + 
+          "FROM tweats AS t INNER JOIN users AS u ON t.user_name = u.user_name WHERE t.user_name = ? " + 
+          "ORDER BY t.id DESC LIMIT ?", [view_user_name, parseInt(shown_limit)], function (err2, results2, fields2) {
+          if (err2) {
+            throw err2;
+          } else {
+            if (results2.length) {
+              for (var myrow = 0; myrow < results2.length; myrow ++) {
+                if (results2[myrow]['name']) {
+                  myrow_tweat = results2[myrow]['tweat'];
+                  tid = results2[myrow]['tid'];
+                } else {
+                  myrow_tweat = "";
+                  
+                }
+                res.write("<p>" + wordwrap(myrow_tweat, tweat_width, '<br />', true));
+    // Red X button for administrator to delete Tweat
+                if (view_admin) {
+                  no_quote_tweat = strtran(myrow_tweat.substr(0,80), "\"'\t\r\n\f", "      ");
+                  res.write("&nbsp;&nbsp;<img src='/users/xdel.png' style='position:relative;top:-2px' " + 
+                    "onclick='if (confirm(\"Are you sure you want to delete this Tweat?:  " + 
+                    no_quote_tweat + "...\")) {window.open(\"/delete_tweat/" + tid + "\");}' />");
+                }
+                res.write("</p>");
+              }
+            } 
+          } 
+          res.end("</div></body></html>");
+          client2.end();
+        });
+      } else {
+        res.end("Sorry, something went wrong.</body></html>");
+      } 
+    }
+    client.end();
+  });
 });
 
 app.get('/user/unsubscribe', function(req, res) { // Process unsubscribe request.
@@ -1245,7 +1755,7 @@ console.log("sign in auto");
 console.log('http://' + req.headers.host + req.url);
 //parsedURL = url.parse('http://' + req.headers.host +  req.url, true);
 
-      if ((req.method === "GET") && (req.url.indexOf("?") > 0)) { // GET data is in URL querystring
+      if ((req.method == "GET") && (req.url.indexOf("?") > 0)) { // GET data is in URL querystring
 console.log("GET recvd");
 
 // Change Tweat Email Notifications preference
@@ -1272,7 +1782,7 @@ console.log("Non-POST recvd");
           //res.end('<html><body>' + message + '<form action="' + SELF_NAME + '" method="GET"><input type="text" name="delete_tweat"><input type="submit" value="send"></form></body></html>');
       }
       
-      if (req.method === "POST") {// Data is POST data
+      if (req.method == "POST") {// Data is POST data
 console.log("POST recvd");
         post_body = "";
         req.on('data', function handlePost(postchunk) { // Accumulate POST data // line 300
@@ -1435,7 +1945,6 @@ function get_home_page(req, res) {
  * Get home page HTML.
  * @returns {string} signed-in user's home page HTML.
  */
-
   main_init(req, res); // Initialize user header HTML and user variables from cookies
 
   if (font_size == FONTSIZE) { // Adjust input width by font size
@@ -1477,7 +1986,7 @@ function get_home_page(req, res) {
         throw err7;
       } else {
         followed_ones_list = "";
-        if (results7) {
+        if (results7.length) {
           for (var myrow3 = 0; myrow3 < results7.length; myrow3++) {
             if (results7[myrow3]['followed_one'] != user_name) {
               followed_ones_list += "<option value='" + results7[myrow3]['followed_one'] + "'>" + 
@@ -1525,7 +2034,7 @@ function get_home_page(req, res) {
       if (chat == "true") {
     console.log("chat mode.");
     // Display Tweats as Chat in iframe
-        name = name.replace(" ", "+");
+        name = name.replace(" ", "+").replace(/\//g, "%2F");
         tweat_list += "<iframe id='tweats_iframe' src='/get_tweats/" + name + 
     "' style='width:1250px;height:590px;position:absolute;" + 
           "left:10px'><p>Your browser doesn't support iframes!</p></iframe>" + 
@@ -1555,7 +2064,7 @@ function get_home_page(req, res) {
             throw err;
           }
     //console.log("results:"+ JSON.stringify(results));
-          if (results) {
+          if (results.length) {
             for (myrow in results) {
               if (results[myrow]['name']) {
                 myrow_name = results[myrow]['name'];
@@ -1584,14 +2093,14 @@ function get_home_page(req, res) {
                   continue;
                 }
               }
-    //console.log(myrow_name + ": " + myrow_tweat);
+//console.log(myrow_name + ": " + myrow_tweat);
     
               tweat_list += "<div class='row' style='color:black'><div class='col-md-3 text-right' " + 
                 "style='word-wrap: break-word; margin-right: 1em; position:relative; left:46px'><b>" + 
-                wordwrap(myrow_name.replace(/%20/g, " "), 40, '<br />', true) + 
+                wordwrap(myrow_name.replace(/%20/g, " ").replace(/%2F/gi,"/"), 40, '<br />', true) + 
                 "</b>:</div><div class='col-md-9' style='margin-left: -2em; position:relative; left:46px'><p>" + 
                 wordwrap(myrow_tweat.replace(/%20/g, " "), tweat_width, '<br />', true);
-              if (myrow_name == name) { // 892
+              if ((myrow_name == name) || (user.admin_status == 1)) { // 892
                 no_quote_tweat = myrow_tweat.substr(0,80).replace('"', ' ');
                 no_quote_tweat = no_quote_tweat.replace(/'/g, "&apos;");
                 no_quote_tweat = no_quote_tweat.replace(/"/g, "&apos;&apos;");
@@ -1897,7 +2406,7 @@ function display_tweats(req, res) {
 '     $("#tweat").val($("#tweat").val().replace(/(http\\S+)/gi, \'<img src="$1" />\'));\n' + 
 '   }\n' + 
 '   function viewUser(user) { // Show another user\'s Public Page (profile)\n' + 
-'     window.open("view_user_name/" + user);\n' + 
+'     window.open("view_user_name/" + user + "/0");\n' + 
 '   }\n' + 
 '   function settings() { // Change password or email address\n' + 
 '     var chosen = prompt("Would you like to change your password or your email address? " + ' + 
@@ -1922,6 +2431,10 @@ function display_tweats(req, res) {
 '   }\n' + 
 '   function hashtagSearch() { // Search Tweats by hashtag (subject), e.g. #popmusic\n' + 
 '     var hashtag = $("#hashtag_search").val();\n' + 
+'     if ((!hashtag) || (hashtag == "#")) {\n' + 
+'       alert("Please type a hashtag in the Hashtag Search field before pressing the button.");\n' + 
+'       return;\n' + 
+'     }\n' + 
 '     hashtag = hashtag.trim().toLowerCase();\n' + 
 '     if (hashtag.substr(0,1) == "#") {\n' + 
 '       hashtag = hashtag.substr(1);\n' + 
@@ -1929,7 +2442,7 @@ function display_tweats(req, res) {
 '     hashtag = hashtag.replace(/(\\*)/g, "%2A");\n' + 
 '     hashtag = hashtag.replace(/\\?/g, "%3F");\n' + 
 '     hashtag = hashtag.replace(/ /g, "");\n' + 
-'     window.open("/hashtag_search_results/" + hashtag + "/' + status + '");\n' + 
+'     window.open("/hashtag_search_results/" + hashtag);\n' + 
 '   }\n' + 
 '   function chatToggle(mode) { // Toggle Chat Mode for 10-second Tweats refresh\n' + 
 '     var date = new Date();\n' + 
@@ -2018,7 +2531,7 @@ TWEATMAXSIZE + ' bytes.)"></input>' +
 '        <div class="span3 form-group">' + 
 '        <textarea class="textarea inbox" rows="4" cols="36" id="interests" name="interests" ' + 
 'maxlength="' + TWEATMAXSIZE + '" ' + 
-'          placeholder="You may type your interests and information here and press Update."' + 
+'          placeholder="You may type your interests and/or information here and press Update &#8593."' + 
 '          style="font-size:' + font_size + ';height:80px;' + interests_width + '">' + interests + '</textarea>' + 
 '        </div>' + 
 '        </fieldset>' + 
@@ -2066,14 +2579,14 @@ TWEATMAXSIZE + ' bytes.)"></input>' +
 '        <button type="button" class="btn btn-warning" onclick="shownLimit();" style="position:relative;' + 
 'top:-3px;padding-left:3px;padding-right:3px">Limit: ' + shown_limit + '</button>' + 
 '        </span></span><br /></div></fieldset></div></form>' + 
-'        <form action="/user_search_results/' + status + '" method="POST" ' + 
+'        <form action="/user_search_results" method="POST" ' + 
 'role="form" target="_blank" id="user_search_form"><br />' + 
 '        <nobr><span style="position:relative;top:-32px">User Search: </span><textarea ' + 
 'class="textarea inbox" rows="1" cols="75" id="search_any" name="search_any" maxlength="250" ' + 
 ' style="font-size:' + font_size + ';position:relative;top:-22px;width:613px" ' + 
 'placeholder="To search by interests, info or names, type them here and press--&gt;"></textarea>&nbsp;' + 
 '<button type="submit" class="btn btn-info" style="position:relative;top:-33px;left:-1px;height:33px">' + 
-'User Search</button></nobr><br /></form><form action="/boolean_user_search_results/' + status + '" method="POST" role="form" target="_blank"><br />' + 
+'User Search</button></nobr><br /></form><form action="/boolean_search_results/' + status + '" method="POST" role="form" target="_blank"><br />' + 
 '        <nobr><span style="position:relative;top:-49px;left:-40">Boolean Search: <input type="text" ' + 
 'style="position:relative;width:250px" placeholder="First Search Term" id="search_one" ' + 
 '          name="search_one" maxlength="30" size="26">' + 
@@ -2189,7 +2702,7 @@ function main_init(req, res) {
 '      <li role="presentation" class="btn btn-danger"><a href="/user/signout" onclick="signOut();"' + 
 '        style="color:lightgray">Sign Out</a></li>' + 
 '     <li role="presentation" class="btn btn-info">' + 
-'        <a href="/view_user_name/' + user_name + '" target="_blank">Public Page</a>' + 
+'        <a href="/view_user_name/' + user_name + '/1" target="_blank">Public Page</a>' + 
 '      </li>' + 
 '    </ul>' + 
 '</nav>';
@@ -2215,7 +2728,7 @@ function main_init(req, res) {
 '      <li role="presentation" class="btn btn-danger"><a href="signout.html" onclick="signOut();"' + 
 '        style="color:lightgray">Sign Out</a></li>' + 
 '     <li role="presentation" class="btn btn-info">' + 
-'        <a href="view_user_name/' + user_name + '" style="width:105px" target="_blank">Public Page</a>' + 
+'        <a href="view_user_name/' + user_name + '/1" style="width:105px" target="_blank">Public Page</a>' + 
 '      </li>' + 
 '    </ul>' + 
 '</nav>';
@@ -2241,7 +2754,7 @@ function main_init(req, res) {
 '      <li role="presentation" class="btn btn-danger"><a href="signout.html" onclick="signOut();"' + 
 '        style="color:lightgray">Sign Out</a></li>' + 
 '     <li role="presentation" class="btn btn-info">' + 
-'        <a href="view_user_name/' + user_name + '" style="width:105px" target="_blank">Public Page</a>' + 
+'        <a href="view_user_name/' + user_name + '/1" style="width:105px" target="_blank">Public Page</a>' + 
 '      </li>' + 
 '    </ul>' + 
 '</nav>';
@@ -2392,6 +2905,7 @@ console.log("un:"+ user_name);
       throw err2;
     } else {
       var status = results2[0]['admin_status'];
+      client2.end();
 
       var client3 = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false }); 
       client3.query("USE " + DATABASE_NAME);
@@ -2408,7 +2922,8 @@ console.log("un:"+ user_name);
           }
           //res.writeHead(200, {'Content-Type': 'text/html' });
           //sign_in_to_account(req, res);
-          get_home_page(req, res);
+          client3.end();
+          display_delete_message(req, res);
         });
       } else {
 
@@ -2423,15 +2938,13 @@ console.log("un:"+ user_name);
           }
           //res.writeHead(200, {'Content-Type': 'text/html' });
           //sign_in_to_account(req, res);
-          get_home_page(req, res);
+          client3.end();
+          display_delete_message(req, res);
           message = "";
         });
       }
-      client3.end();
     }
-
   });
-  client2.end();
 }
 
 function password_forgotten(res) {
@@ -2576,12 +3089,12 @@ console.log('Invalid UTF-8 Tweat: ', tweat + " ", e, result);
   client.query("SET NAMES 'utf8'");
 
   hashtag_pos = tweat.indexOf("#"); // Look for hashtag (Tweat subject marker)
-  if (hashtag_pos === false) {
+  if (hashtag_pos == -1) {
     hashtag = null;
   } else {
     hashtag_pos++;
     start = hashtag_pos;
-    while ((hashtag_pos < tweat.length) && (" ,.?!:*;/()-+{}[]|\"<>\\\`".indexOf(tweat.substr(hashtag_pos, 1)) === false)) {
+    while ((hashtag_pos < tweat.length) && (" ,.?!:*;/()-+{}[]|\"<>\\\`".indexOf(tweat.substr(hashtag_pos, 1)) == -1)) {
       hashtag_pos++; // Find end of hashtag
     }
     hashtag = tweat.substr(start, hashtag_pos - start).toLowerCase().trim();
@@ -2629,10 +3142,10 @@ console.log("tw:" + tweat);
           '<b style="font-size:40px;color:red;background-color:violet;' + 
           'float:left;text-decoration:none">&nbsp;Tweater&nbsp;</b></a>&nbsp;&nbsp;&nbsp;&nbsp;' + 
            tweamail + '<br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />' + 
-          '<br /><br /><br /><br /><br /><br />How to unsubscribe to Tweat Notifications:<br />' + 
+          '<br /><br /><br /><br /><br /><br /><hr />How to unsubscribe to Tweat Notifications:<br />' + 
           '<br />If you don\'t want to receive Tweat Notifications, ' + 
-          'please sign in to <a href="http://' + DATABASE_HOST + '/' + SELF_NAME + '">your Tweater ' + 
-          'Account</a> and click on<br />the Tweat Notifications button at the left. ' + 
+          'sign in to <a href="http://' + DATABASE_HOST + '/' + SELF_NAME + '">your Tweater ' + 
+          'Account</a> and click on the Tweat Notifications button at the left. ' + 
           'A pop-up prompt will appear. Type the word No and click on OK.'});
           }
         }
@@ -3019,8 +3532,8 @@ console.log("picext" + picture_ext);
             message = message + error_sorry;
             uploadOk = 0;
           } else {
-            user_name = cookies.get('user_name').trim().replace("%40","@");
-            password = cookies.get('password').trim();
+            user_name = cookies.get('user_name').replace("%40","@");
+            password = cookies.get('password').replace("%40","@");
             password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
             uploadOk = 1;
           }
@@ -3032,7 +3545,7 @@ console.log("upldok" + uploadOk);
     // If everything is ok, try to upload
           } else {
             var client = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
-            console.log("pwh: " + password_hash + user_name);
+console.log("pwh: " + password_hash + user_name);
 
             client.query("USE " + DATABASE_NAME);
             client.query("SELECT * FROM " + DATABASE_TABLE + " WHERE (user_name = ?) and (binary " + 
@@ -3042,62 +3555,64 @@ console.log("upldok" + uploadOk);
                   "You may try again. ";
                     //throw err;
               } else {
-                if (results) {
+                if (results.length) {
+console.log("fd results.");
                   if (results[0]['picture_ext']) {
+console.log("deleting " + results.toString());
                     var old_filename = __dirname + "/pictures/" + results[0]['id'] + "." + results[0]['picture_ext'];
                     fs.unlink(old_filename, function (err, results, fields) {
                     });
-  console.log("deleting " + old_filename);
-                    var client2 = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
-                    client2.query("USE " + DATABASE_NAME);
-                    client2.query("UPDATE " + DATABASE_TABLE + " SET picture_ext = ? WHERE (user_name = ?) AND (binary" + 
-                      " password_hash = ?)", [picture_ext, user_name, password_hash], function (err2, results2, fields2) {
-                      if (err2) {
-                        message = "ERROR: Picture not uploaded! Sorry, but something went wrong.<br />" +  
-                          "You may try again. ";
-                          //throw err2;
-                      } else {
-  console.log("new picext: " + picture_ext);
-                        client2.end();
-                        user.picture_ext = picture_ext;
-                        fs.rename(__dirname + "/pictures/tmp/" + filename, __dirname + "/pictures/" + id + "." + picture_ext, function(err3) {
-                          if (err3) {
-                            message = message + error_sorry;
-                          } else {
-  console.log("renaming/moving: " + filename + " to " + id + "." + picture_ext);
-                            message = "Picture uploaded! To see the new picture, go back to your home page an" + 
-                              "d click on your browser's Refresh button or click on Home at the top left. Not" + 
-                              "e: You can also post URLs of pictures that start with \\\"http\\\". After typing o" + 
-                              "r pasting the URL in the Tweat textbox, click the Pic button and press Enter.";
-                            res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
-                            res.end("<!DOCTYPE HTML><HTML><head><script>" + 
-                              "alert(\"" + message + "\"); window.close();</script></head><body></body></html>");
-                            //client.end();
-                            message = "";
-                            return;
-                          }
-                        });
-                      }
-                      if (message) {
-                        res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
-                        res.end("<!DOCTYPE HTML><HTML><head><script>" + 
-                          "alert(\"" + message + "\"); window.close();</script></head><body></body></html>");
-                        return;
-                      }
-  console.log("client2 ended. msg:" + message);
-                    });
+
                   }
+                  var client2 = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
+                  client2.query("USE " + DATABASE_NAME);
+                  client2.query("UPDATE " + DATABASE_TABLE + " SET picture_ext = ? WHERE (user_name = ?) AND (binary" + 
+                    " password_hash = ?)", [picture_ext, user_name, password_hash], function (err2, results2, fields2) {
+                    if (err2) {
+                      message = "ERROR: Picture not uploaded! Sorry, but something went wrong.<br />" +  
+                        "You may try again. ";
+                        //throw err2;
+                    } else {
+console.log("new picext: " + picture_ext);
+                      client2.end();
+                      user.picture_ext = picture_ext;
+                      fs.rename(__dirname + "/pictures/tmp/" + filename, __dirname + "/pictures/" + id + "." + picture_ext, function(err3) {
+                        if (err3) {
+                          message = message + error_sorry;
+                        } else {
+console.log("renaming/moving: " + filename + " to " + id + "." + picture_ext);
+                          message = "Picture uploaded! To see the new picture, go back to your home page an" + 
+                            "d click on your browser's Refresh button or click on Home at the top left. Not" + 
+                            "e: You can also post URLs of pictures that start with \\\"http\\\". After typing o" + 
+                            "r pasting the URL in the Tweat textbox, click the Pic button and press Enter.";
+                          res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+                          res.end("<!DOCTYPE HTML><HTML><head><script>" + 
+                            "alert(\"" + message + "\"); window.close();</script></head><body></body></html>");
+                          //client.end();
+                          message = "";
+                          return;
+                        }
+                        if (message) {
+                          res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
+                          res.end("<!DOCTYPE HTML><HTML><head><script>" + 
+                            "alert(\"" + message + "\"); window.close();</script></head><body></body></html>");
+                          message = "";
+console.log("client2 ended. msg:" + message);
+                        }
+                      });
+                    }
+                  });
                 }
               }
+console.log("client end.");
+              client.end();
               if (message) {
                 res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
                 res.end("<!DOCTYPE HTML><HTML><head><script>" + 
                   "alert(\"" + message + "\"); window.close();</script></head><body></body></html>");
-              } else {
-                client.end();
+                message = "";
               }
-              return;
-            }); //
+            });
           }
         });
       }); 
@@ -3110,8 +3625,64 @@ console.log("upldok" + uploadOk);
   /*res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
     res.end("<!DOCTYPE HTML><HTML><head><script>alert(\"" + message + "\"); window.close();</script></head>" + 
       "<body></body></html>");*/
-    return;
   }
+  return;
+}
+
+function all_users_display(req, res) {
+  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  res.write("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>All Users Search Results</title>" +
+    "<script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js'></script>" +
+    "<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js'></script>" +
+    "<script><!--" +
+    "(document).ready(function(){\n" +
+      "('img').mousedown(function(){\n" +
+        "(this).animate({opacity: '0.5'},100);\n" +
+    "  });\n" +
+    "});\n" +
+    "//--></script>\n" +
+    "<style>.user{vertical-align:middle}</style></head><body style='color:black;background-color:#C0C0F0;" + 
+    "padding:8px;font-family:" + font + ";font-size:" + font_size + "px'><h2>All Users " + 
+    "Search Results (Limit " + shown_limit + "):</h2><ul>");
+
+  var client = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
+  client.query("USE " + DATABASE_NAME);
+  client.query("SET NAMES 'utf8'");
+  client.query("SELECT name, user_name, id as uid FROM users ORDER BY name LIMIT " + shown_limit, function (err, results, fields) {
+    if (err) {
+      throw err;
+    } else {
+      for (var myrow = 0; myrow < results.length; myrow ++) {
+        vname = results[myrow]['name'].replace(/%2F/gi,"/");
+        vuname = results[myrow]['user_name'].replace(/%2F/gi,"/");
+        uid = results[myrow]['uid'];
+        res.write("<li><img src='/users/follow.png' class='user' onclick='window.open(\"/follow/" + vuname + 
+          "/" + vname + "\");' />&nbsp;&nbsp;<img src='/users/unfollow.png' class='user' onclick='" +
+          "window.open(\"/unfollow/" + vuname + "/" + vname + "\");' />&nbsp;&nbsp;" +
+          "<a style='a:link{color:#000000};a:vlink{color:#990099};a:alink{color:#999900};" +
+          "a:hlink{color:#000099};' href='/view_user_name/" + vuname + "/0' target='_blank'>" + vname +
+          " (Username: " + vuname + ")</a>");
+// X button for administrator to delete Tweat
+        if (admin) {
+          res.write("&nbsp;&nbsp;<img src='/users/xdel.png' class='user' onclick='if (confirm(\"Are you " +
+            "sure you want to delete this user?:  " + vname + " (Username: " + vuname + "; User ID: " +
+            uid + ")\")) {window.open(\"/delete_listed_user/" + uid + "/" + vuname + "\")}' />");
+        }
+        res.write("</li>");
+      }
+    }
+    res.end("</ul><br /><br /></body></html>");  
+    client.end();
+  });
+}
+
+function display_delete_message(req, res) {
+  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  res.end("<!DOCTYPE html><html><head><title>Tweat Delete</title><body onload=\"alert('The Tweat was " + 
+    "deleted.');location.replace('/');\"><h1><b style='font-size:" + 
+    "72px;color:red;background-color:violet'>&nbsp;Tweater&nbsp;</b></h1><h1 style='text-align:center'>" +
+    "<a href='/' onclick=\"location.replace('/');\">If you're not redirected to Tweater in a few seconds" +
+    ", please click here.</a></h1></body></html>");
 }
 
 exports.start = start;
