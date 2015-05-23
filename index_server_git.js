@@ -1,5 +1,30 @@
-// Express version of my Tweater app by David K. Crandall, (C) 2015.
+//res.redirect('back');
+// Be sure to update the users array when changing user DB, e.g. pw change.
+// res.setHeader('Location', '/');
+// res.location('/customers/' + inst._id);
 
+// Express version of my Tweater app by David K. Crandall, (C) 2015.
+// --*** When registering, change whitespace in name to a single space with .replace(/\s+/g, " ").
+/* To put funcs in separate files:
+File: myfunc.js:
+//Myfunc constructor:
+var Myfunc = function() {
+};
+// Description here.
+Myfunc.prototype.parse = function(text) {
+...
+};
+module.exports = Myfunc;
+(end of file myfunc.js)
+-----------
+Used thus in another file:
+var Myfunc = require('./myfunc'); 
+var f = new Myfunc();
+console.log(f.parse("hi there")); 
+*/
+
+// fix utf8 encoding problem
+// Use JSDoc style comments:
 /**
  * @fileOverview Tweater Twitter-like social media application.
  * @version 2.0
@@ -562,7 +587,7 @@ console.log("chat iframe 1");
             no_quote_tweat = no_quote_tweat.replace(/>/g, "&gt;");
 
 // X button to delete Tweat
-            res.write("&nbsp;&nbsp;&nbsp;<span style='color:black;background-color:red' onclick='if (confirm(\"Are you sure you want to delete this Tweat?:  " + 
+            res.write("&nbsp;&nbsp;&nbsp;<span style='color:black;background-color:red' onclick='if (confirm(\"Are you sure you want to delete this Tweat?:\\n  " + 
             no_quote_tweat + "...\")) {window.open(\"/delete_tweat/\" + " + tid + ", \"_parent\");}'>&nbsp;X&nbsp;</span>");
           }
           res.write("</td></tr>");
@@ -609,7 +634,7 @@ app.get('/help', function(req, res) {
 bigfont + 'px;color:red;background-color:#990099"><b>&nbsp;Tweater Help&nbsp;</b></a></div><img src="/users/tweatyquestion.png" style="float:right" />' + help_html);
 });
 
-app.get('/users/:user_name', function(req, res) {
+/*app.get('/users/:user_name', function(req, res) {
   user_name = req.params.user_name.toLowerCase().trim().replace(/\+/g, " ").replace(/\s+/g, " ").replace(/%40/g, "@").replace(/%2B/g, "+");
 
   user = _.find(users, function(u) {
@@ -617,7 +642,6 @@ app.get('/users/:user_name', function(req, res) {
   });
 
   if (user) { // Signing-in user found
-// *** try db sign in w/ pw here
     if (picture_ext.length < 1) {
       picture_url = "nophoto.jpg";
     } else {
@@ -627,7 +651,7 @@ app.get('/users/:user_name', function(req, res) {
     res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
     show_home_page(req, res);
   }
-  /* result = user
+  result = user
     ? { success: true, user: user}
     : { success: false, reason: 'user not found: ' + user_name};
   var tw = new Buffer(JSON.stringify(users)+JSON.stringify(tweats), 'ascii').toString('utf8');
@@ -635,8 +659,8 @@ app.get('/users/:user_name', function(req, res) {
   res.end("<!DOCTYPE html><html><head><meta http-equiv=Content-Type content='text/html; charset=UTF-8' /><title>Test!!</title></head><body>año.<br />"+tw+"</body></html>");
 console.log("success:" + result.success);
 console.log("reason:" + result.reason);
-console.log("año."+tweats[22].tweat); */
-});
+console.log("año."+tweats[22].tweat);
+});*/
 
 app.get('/upload_picture', function(req, res) {
 console.log("upload");
@@ -762,6 +786,12 @@ console.log("updating interests of:" + cookies.get('user_name'));
     if (err8) {
       //throw err8;
     }
+    if (!results8.length) {
+      res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+      res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Error!</title></head><body style='background-color:#99D9EA;padding:8px;" + 
+      "font-family:" + font + ";font-size:" + font_size + "px'>Sorry, something went wrong! The information was not updated!</body></html>");
+      return;
+    }
     row_interests = results8[0]['interests'] || "";
 
     if ((interests == "") || (!interests)) { // No info given
@@ -886,9 +916,12 @@ console.log("updating interests of:" + cookies.get('user_name'));
   // Add new updated interests to database
               var client4 = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
               client4.query("USE " + DATABASE_NAME);
-  console.log('new_interests_array:', new_interests_array);
               for (var new_item = 0; new_item < new_interests_array.length; new_item++) {
-                if ((new_interests_array[new_item].length > 0) && (old_interests.indexOf(" " + new_item + " ") == -1)) {
+console.log("new_interest:<" +  new_interests_array[new_item] + ">l:" + new_interests_array[new_item].length);
+                if (new_interests_array[new_item] == " ") {
+                  continue;
+                }
+                if ((new_interests_array[new_item].length > 0) && (old_interests.indexOf(" " + new_interests_array[new_item] + " ") == -1)) {
   
                   client4.query("INSERT INTO interests (id, user_name, interest) values(NULL, ?,?)", [user_name, new_interests_array[new_item] ], function (err4, results4, fields4) { // 700
                     if (err4) {
@@ -905,7 +938,10 @@ console.log("updating interests of:" + cookies.get('user_name'));
               client5.query("USE " + DATABASE_NAME);
   
               for (var old_item = 0; old_item < old_interests_array.length; old_item++) {
-                if ((old_interests_array[old_item].length > 0) && (new_interests.indexOf(" " + old_item + " ") == -1)) {
+                if (old_interests_array[old_item] == " ") {
+                  continue;
+                }
+                if ((old_interests_array[old_item].length > 0) && (new_interests.indexOf(" " + old_interests_array[old_item] + " ") == -1)) {
                   client5.query("DELETE FROM interests WHERE user_name = ? AND interest = ?", [user_name, old_interests_array[old_item] ], function (err5, results5, fields5) {
                     if (err5) {
                       throw err5;
@@ -932,10 +968,10 @@ console.log("updating interests of:" + cookies.get('user_name'));
 
 app.post('/user/new', function(req, res) {
   var user = req.body;
-console.log("user:", JSON.stringify(user));
 // *** Add only A-Z a-z 0-9 ' _ - . @ only chars allowed in un
   user.user_name = user.user_name.trim().toLowerCase().replace(/\s+/g, " ").replace("%40", "@").replace(/\//g, "%2F");
   user.name = user.name.trim().replace(/\s+/g, " ").replace("%40", "@").replace(/\//g, "%2F");
+console.log("user:", JSON.stringify(user));
   message = "";
 console.log("given new un:" + user.user_name);
   if (!user.user_name || !user.name) {
@@ -1019,11 +1055,16 @@ console.log("New user: " + user_name);
           interests_array = interests_words.split(" ");
           interests_array = interests_array.filter(function(item, i, ar){return ar.indexOf(item) === i;});
           for (var item = 0; item < interests_array.length; item++) {
-            client5.query("INSERT INTO interests (id, user_name, interest) values(NULL, ?,?)", [user_name, interests_array[item] ], function (err5, results5, fields5) {
-              if (err5) {
-                throw err5;
-              }
-            });
+            if (interests_array[item] == " ") {
+              continue;
+            }
+            if (interests_array[item].length > 0) {
+              client5.query("INSERT INTO interests (id, user_name, interest) values(NULL, ?,?)", [user_name, interests_array[item] ], function (err5, results5, fields5) {
+                if (err5) {
+                  throw err5;
+                }
+              });
+            }
           }
           client5.end();
 // Set session cookies
@@ -1072,7 +1113,7 @@ console.log("hashtag search:" + req.params.hashtag);
   });
   admin = false;
   if (user) {
-    if (user.admin_status == 1) {
+    if ((user.admin_status == 1) && (password_hash == user.password_hash)) {
       admin = true;
     }
   }
@@ -1124,7 +1165,7 @@ console.log("hashtag search:" + req.params.hashtag);
           res.write("<li><img src='/users/follow.png' class='user' onclick='window.open(\"/follow/" + vuname + "/" + 
             vname + "\");' />&nbsp;&nbsp;<a style='a:link{color:#000000};a:vlink{color:#990099};" + 
             "a:alink{color:#999900};a:hlink{color:#000099};' href='/view_user_name/" + vuname + 
-            "/0' target='_blank'>" + vname + ":</a>&nbsp;&nbsp;" + tweat);
+            "' target='_blank'>" + vname + ":</a>&nbsp;&nbsp;" + tweat);
 
 // X button for administrator to delete Tweat
           if (admin) {
@@ -1139,8 +1180,8 @@ console.log("hashtag search:" + req.params.hashtag);
             no_quote_tweat = no_quote_tweat.replace(/>/g, "&gt;");
 
             res.write("&nbsp;&nbsp;<img src='/users/xdel.png' style='position:relative;top:7px' onclick='" + 
-              "if (confirm(\"Are you sure you want to delete this Tweat?:  " + no_quote_tweat + 
-              "...\")) {location.replace(\"/delete_tweat/" + tid + "\");}' />");
+              "if (confirm(\"Are you sure you want to delete this Tweat?:\\n  " + no_quote_tweat + 
+              "...\")) {window.open(\"/delete_tweat/" + tid + "\");}' />");
           }
           res.write("</li>");
         }
@@ -1182,7 +1223,7 @@ console.log("user search");
   });
   admin = false;
   if (user) {
-    if (user.admin_status == 1) {
+    if ((user.admin_status == 1) && (password_hash == user.password_hash)) {
       admin = true;
     }
   }
@@ -1245,23 +1286,22 @@ console.log("search:"+search_any_array[search_item]);
             vname = results[myrow]['name'].replace(/%2F/gi,"/");
             vuname = results[myrow]['user_name'].replace(/%2F/gi,"/");
             uid = results[myrow]['uid'];
-            if (user_name != vuname) {
-              sublist_count++;
-              cases_count++;
-              res.write("<li><img src='/users/follow.png' class='user' onclick='window.open(\"/follow/" + vuname + 
-                "/" + vname + "\");' />&nbsp;&nbsp;<img src='/users/unfollow.png' class='user' onclick='" +
-                "window.open(\"/unfollow/" + vuname + "/" + vname + "\");' />&nbsp;&nbsp;" +
-                "<a style='a:link{color:#000000};a:vlink{color:#990099};a:alink{color:#999900};" +
-                "a:hlink{color:#000099};' href='/view_user_name/" + vuname + "/0' target='_blank'>" + vname +
-                " (Username: " + vuname + ")</a>");
+            sublist_count++;
+            cases_count++;
+            res.write("<li><img src='/users/follow.png' class='user' onclick='window.open(\"/follow/" + vuname + 
+              "/" + vname + "\");' />&nbsp;&nbsp;<img src='/users/unfollow.png' class='user' onclick='" +
+              "window.open(\"/unfollow/" + vuname + "/" + vname + "\");' />&nbsp;&nbsp;" +
+              "<a style='a:link{color:#000000};a:vlink{color:#990099};a:alink{color:#999900};" +
+              "a:hlink{color:#000099};' href='/view_user_name/" + vuname + 
+              "' target='_blank'>" + vname +
+              " (Username: " + vuname + ")</a>");
 // X button for administrator to delete Tweat
-              if (admin) {
-                res.write("&nbsp;&nbsp;<img src='/users/xdel.png' class='user' onclick='if (confirm(\"Are you sure " +
-                  "you want to delete this user?:  " + vname + " (Username: " + vuname + "; User ID: " +
-                  uid + ")\")) {window.open(\"/delete_listed_user/" + uid + "/" + vuname + "\")}' />");
-              }
-              res.write("</li>");
+            if (admin) {
+              res.write("&nbsp;&nbsp;<img src='/users/xdel.png' class='user' onclick='if (confirm(\"Are you " +
+                "sure you want to delete this user?:\\n  " + vname + " (Username: " + vuname + "; User ID: " +
+                uid + ")\")) {window.open(\"/delete_listed_user/" + uid + "/" + vuname + "\")}' />");
             }
+            res.write("</li>");
           }
           res.write("<br />Total users with \"" + search_any_array[report_count] + "\":  " + sublist_count);
         } else {
@@ -1325,7 +1365,7 @@ app.post('/boolean_search_results', function(req, res) {
   });
   admin = false;
   if (user) {
-    if (user.admin_status == 1) {
+    if ((user.admin_status == 1) && (password_hash == user.password_hash)) {
       admin = true;
     }
   }
@@ -1393,17 +1433,17 @@ app.post('/boolean_search_results', function(req, res) {
   client.query("USE " + DATABASE_NAME);
   client.query("SET NAMES 'utf8'");
   if (search_two == "") {
-    var boolean_query = "SELECT name, user_name, id as uid FROM users WHERE (interests_words LIKE ?) " + 
-      "AND (user_name != ?) ORDER BY ? LIMIT ?";
-    var boolean_query_params = new Array(search_one, user_name, search_one, parseInt(shown_limit));
+    var boolean_query = "SELECT name, user_name, id as uid FROM users WHERE interests_words LIKE ? " + 
+      "ORDER BY user_name LIMIT ?";
+    var boolean_query_params = new Array(search_one, parseInt(shown_limit));
   } else if (search_type == "NOT") {
     var boolean_query = "SELECT name, user_name, id as uid FROM users WHERE ((interests_words LIKE ?) " + 
-      "AND (interests_words NOT LIKE ?)) AND (user_name != ?) ORDER BY ? LIMIT ?";
-    var boolean_query_params = new Array(search_one, search_two, user_name, search_one, parseInt(shown_limit));
+      "AND (interests_words NOT LIKE ?)) ORDER BY user_name LIMIT ?";
+    var boolean_query_params = new Array(search_one, search_two, parseInt(shown_limit));
   } else {
     var boolean_query = "SELECT name, user_name, id as uid FROM users WHERE ((interests_words LIKE ?) " + 
-      search_type + " (interests_words LIKE ?)) AND (user_name != ?) ORDER BY ? LIMIT ?";
-    var boolean_query_params = new Array(search_one, search_two, user_name, search_one, parseInt(shown_limit));
+      search_type + " (interests_words LIKE ?)) ORDER BY user_name LIMIT ?";
+    var boolean_query_params = new Array(search_one, search_two, parseInt(shown_limit));
   }
 
   client.query(boolean_query, boolean_query_params, function (err, results, fields) {
@@ -1433,21 +1473,19 @@ app.post('/boolean_search_results', function(req, res) {
         vname = results[myrow]['name'].replace(/%2F/gi,"/");
         vuname = results[myrow]['user_name'].replace(/%2F/gi,"/");
         uid = results[myrow]['uid'];
-        if (user_name != vuname) {
-          res.write("<li><img src='/users/follow.png' class='user' onclick='window.open(\"/follow/" + vuname + 
-            "/" + vname + "\");' />&nbsp;&nbsp;<img src='/users/unfollow.png' class='user' onclick='" +
-            "window.open(\"/unfollow/" + vuname + "/" + vname + "\");' />&nbsp;&nbsp;" +
-            "<a style='a:link{color:#000000};a:vlink{color:#990099};a:alink{color:#999900};" +
-            "a:hlink{color:#000099};' href='/view_user_name/" + vuname + "/0' target='_blank'>" + vname +
-            " (Username: " + vuname + ")</a>");
+        res.write("<li><img src='/users/follow.png' class='user' onclick='window.open(\"/follow/" + vuname + 
+          "/" + vname + "\");' />&nbsp;&nbsp;<img src='/users/unfollow.png' class='user' onclick='" +
+          "window.open(\"/unfollow/" + vuname + "/" + vname + "\");' />&nbsp;&nbsp;" +
+          "<a style='a:link{color:#000000};a:vlink{color:#990099};a:alink{color:#999900};" +
+          "a:hlink{color:#000099};' href='/view_user_name/" + vuname + "' target='_blank'>" + vname +
+          " (Username: " + vuname + ")</a>");
 // X button for administrator to delete Tweat
-          if (admin) {
-            res.write("&nbsp;&nbsp;<img src='/users/xdel.png' class='user' onclick='if (confirm(\"Are you sure " +
-              "you want to delete this user?:  " + vname + " (Username: " + vuname + "; User ID: " +
-              uid + ")\")) {window.open(\"/delete_listed_user/" + uid + "/" + vuname + "\")}' />");
-          }
-          res.write("</li>");
+        if (admin) {
+          res.write("&nbsp;&nbsp;<img src='/users/xdel.png' class='user' onclick='if (confirm(\"Are you sure " +
+            "you want to delete this user?:\\n  " + vname + " (Username: " + vuname + "; User ID: " +
+            uid + ")\")) {window.open(\"/delete_listed_user/" + uid + "/" + vuname + "\")}' />");
         }
+        res.write("</li>");
       }
     }
     res.end("</ul><br /><br /></body></html>");  
@@ -1455,9 +1493,21 @@ app.post('/boolean_search_results', function(req, res) {
   });
 });
 
-app.get('/view_user_name/:user_name/:status', function(req, res) {
+app.get('/view_user_name/:user_name', function(req, res) {
 // Show some chosen user's Public Page (profile)
   cookies = new Cookies(req, res);
+  user_name = cookies.get('user_name').trim().replace("%40","@");
+  password = cookies.get('password').trim().replace("%40","@");
+  password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+  user = _.find(users, function(u) {
+    return u.user_name == user_name;
+  });
+  var view_admin = false;
+  if (user) {
+    if ((user.admin_status == 1) && (password_hash == user.password_hash)) {
+      view_admin = true;
+    }
+  }
   if (cookies.get('font_size')) {
     font_size = cookies.get('font_size');
   } else {
@@ -1476,10 +1526,8 @@ app.get('/view_user_name/:user_name/:status', function(req, res) {
   } else {
     font = "Helvetica";
   }
-
   res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
   var view_user_name = req.params.user_name;
-  var view_admin = (req.params.status == "1");
   if ((!view_user_name) || (view_user_name == "")) {
     view_name = "Nobody";
     view_user_name = "Not much to see here!";
@@ -1488,6 +1536,7 @@ app.get('/view_user_name/:user_name/:status', function(req, res) {
       "font-family:" + font + ";font-size:" + font_size + "px'>Sorry, something went wrong!</body></html>");
     return;
   }
+
   view_user_name = view_user_name.toLowerCase().trim().replace(/\+/g, " ").replace(/\s+/g, " ").replace(/%40/g, "@").replace(/%2B/g, "+");
 
   var client = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
@@ -1547,7 +1596,7 @@ app.get('/view_user_name/:user_name/:status', function(req, res) {
                 if (view_admin) {
                   no_quote_tweat = strtran(myrow_tweat.substr(0,80), "\"'\t\r\n\f", "      ");
                   res.write("&nbsp;&nbsp;<img src='/users/xdel.png' style='position:relative;top:-2px' " + 
-                    "onclick='if (confirm(\"Are you sure you want to delete this Tweat?:  " + 
+                    "onclick='if (confirm(\"Are you sure you want to delete this Tweat?:\\n  " + 
                     no_quote_tweat + "...\")) {window.open(\"/delete_tweat/" + tid + "\");}' />");
                 }
                 res.write("</p>");
@@ -1563,6 +1612,157 @@ app.get('/view_user_name/:user_name/:status', function(req, res) {
     }
     client.end();
   });
+});
+
+app.get('/follow/:vuname/:vname', function(req, res) {
+// Follow another user
+  cookies = new Cookies(req, res);
+  user_name = cookies.get('user_name').trim().replace("%40","@");
+  password = cookies.get('password').trim().replace("%40","@");
+  password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+  followed_one = req.params.vuname;
+  followed_name = req.params.vname;
+  user = _.find(users, function(u) {
+    return ((u.user_name == user_name) && (u.password_hash == password_hash));
+  });
+
+  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  if (!user) {
+    res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Follow Error</title></head><body " + 
+      "style='background-color:#99D9EA;padding:8px;" + 
+      "font-family:" + font + ";font-size:" + font_size + "px'>Sorry, something went wrong! The user " + 
+      followed_one + " is not followed! You may try again.</body></html>");
+    return;
+  }
+
+  if (followed_one.length > 0) {
+    var client = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
+    client.query("USE " + DATABASE_NAME);
+    client.query("SET NAMES 'utf8'");
+    client.query("SELECT * FROM followed_ones WHERE user_name = ? AND followed_one = ?", [user_name, followed_one], function (err, results, fields) {
+      if (err) {
+        throw err;
+      } else {
+        if (results.length) {
+          if (user_name == followed_one) {
+            res.end("<!DOCTYPE html><html><head><title>Tweater Follow User Error</title><body onload=\"alert('" + 
+              "Hey, you can\\'t follow YOURSELF! (I tried it once, and kept going in circles...)');" + 
+              "window.close();\"><h1><b style='font-size:" + "72px;color:red;background-color:violet'>" + 
+              "&nbsp;Tweater&nbsp;</b></h1><h1 style='text-align:center'><a href='/' " + 
+              "onclick=\"location.replace('/');\">If you're not redirected to Tweater in a few seconds, " +
+              "please click here.</a></h1></body></html>");
+          } else {
+            res.end("<!DOCTYPE html><html><head><title>Tweater Follow User Error </title><body onload=\"alert('" + 
+              followed_name + "(" + followed_one + ") is already on your list of followed users.');" + 
+              "window.close();\"><h1><b style='font-size:" + "72px;color:red;background-color:violet'>" + 
+              "&nbsp;Tweater&nbsp;</b></h1><h1 style='text-align:center'><a href='/' " + 
+              "onclick=\"location.replace('/');\">If you're not redirected to Tweater in a few seconds, " +
+              "please click here.</a></h1></body></html>");
+          }
+          client.end();
+          return;
+        } else {
+          client.end();
+          var client2 = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
+          client2.query("USE " + DATABASE_NAME);
+          client2.query("SET NAMES 'utf8'");
+          client2.query("INSERT INTO followed_ones (id, user_name, followed_one) VALUES (NULL, ?, ?)", [user_name, followed_one], function (err2, results2, fields2) {
+            if (err2) {
+              throw err2;
+            } else {
+            res.end("<!DOCTYPE html><html><head><title>Tweater Follow User</title><body onload=\"alert('" + 
+              followed_name + " (" + followed_one + ") is now added to your list of followed users.');" + 
+              "window.close();\"><h1><b style='font-size:" + "72px;color:red;background-color:violet'>" + 
+              "&nbsp;Tweater&nbsp;</b></h1><h1 style='text-align:center'><a href='/' " + 
+              "onclick=\"location.replace('/');\">If you're not redirected to Tweater in a few seconds, " +
+              "please click here.</a></h1></body></html>");
+            }
+          });
+        }
+      }
+    });
+  } else {
+    res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Follow Error</title></head><body " + 
+      "style='background-color:#99D9EA;padding:8px;" + 
+      "font-family:" + font + ";font-size:" + font_size + "px'>Sorry, something went wrong! The user " + 
+      followed_one + " is not followed! You may try again.</body></html>");
+  }
+});
+
+app.get('/unfollow/:vuname/:vname', function(req, res) {
+// Unfollow another user
+  cookies = new Cookies(req, res);
+  user_name = cookies.get('user_name').trim().replace("%40","@");
+  password = cookies.get('password').trim().replace("%40","@");
+  password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+  followed_one = req.params.vuname;
+  followed_name = req.params.vname;
+  user = _.find(users, function(u) {
+    return ((u.user_name == user_name) && (u.password_hash == password_hash));
+  });
+
+  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  if (!user) {
+    res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Unfollow Error</title></head><body " + 
+      "style='background-color:#99D9EA;padding:8px;" + 
+      "font-family:" + font + ";font-size:" + font_size + "px'>Sorry, something went wrong! The user " + 
+      followed_one + " is not unfollowed! You may try again.</body></html>");
+    return;
+  }
+
+  if (followed_one.length > 0) {
+    var client = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
+    client.query("USE " + DATABASE_NAME);
+    client.query("SET NAMES 'utf8'");
+    client.query("SELECT * FROM followed_ones WHERE user_name = ? AND followed_one = ?", [user_name, followed_one], function (err, results, fields) {
+      if (err) {
+        throw err;
+      } else {
+        if (results.length) {
+          client.end();
+          if (user_name == followed_one) {
+            res.end("<!DOCTYPE html><html><head><title>Tweater Unfollow User Error</title><body onload=\"alert(" + 
+              "'Hey, you can\\'t unfollow YOURSELF! (I tried it once, and couldn\\'t find my shadow!)');" + 
+              "window.close();\"><h1><b style='font-size:" + "72px;color:red;background-color:violet'>" + 
+              "&nbsp;Tweater&nbsp;</b></h1><h1 style='text-align:center'><a href='/' " + 
+              "onclick=\"location.replace('/');\">If you're not redirected to Tweater in a few seconds, " +
+              "please click here.</a></h1></body></html>");
+            return;
+          }
+          var client2 = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
+          client2.query("USE " + DATABASE_NAME);
+          client2.query("SET NAMES 'utf8'");
+          client2.query("DELETE FROM followed_ones WHERE user_name = ? AND followed_one = ? AND user_name != followed_one", [user_name, followed_one], function (err2, results2, fields2) {
+            if (err2) {
+              throw err2;
+            } else {
+              client2.end();
+              res.end("<!DOCTYPE html><html><head><title>Tweater Unfollow User</title><body onload=\"alert('" + 
+                followed_name + " (" + followed_one + ") is now removed from your list of followed users. " +
+                "(Don\\'t worry, I won\\'t tell " + followed_name + ". The news would be crushing!)');" + 
+                "window.close();\"><h1><b style='font-size:" + "72px;color:red;background-color:violet'>" + 
+                "&nbsp;Tweater&nbsp;</b></h1><h1 style='text-align:center'><a href='/' " + 
+                "onclick=\"location.replace('/');\">If you're not redirected to Tweater in a few seconds, " +
+                "please click here.</a></h1></body></html>");
+            }
+          });
+        } else {
+          client.end();
+            res.end("<!DOCTYPE html><html><head><title>Tweater Unfollow User Error</title><body onload=\"alert(" + 
+              "'You can\\'t unfollow someone that you\\'re not following! It boggles the mind too much...');" + 
+              "window.close();\"><h1><b style='font-size:" + "72px;color:red;background-color:violet'>" + 
+              "&nbsp;Tweater&nbsp;</b></h1><h1 style='text-align:center'><a href='/' " + 
+              "onclick=\"location.replace('/');\">If you're not redirected to Tweater in a few seconds, " +
+              "please click here.</a></h1></body></html>");
+        }
+      }
+    });
+  } else {
+    res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Unfollow Error</title></head><body " + 
+      "style='background-color:#99D9EA;padding:8px;" + 
+      "font-family:" + font + ";font-size:" + font_size + "px'>Sorry, something went wrong! The user " + 
+      followed_one + " is not unfollowed! You may try again.</body></html>");
+  }
 });
 
 app.get('/user/unsubscribe', function(req, res) { // Process unsubscribe request.
@@ -1609,9 +1809,61 @@ console.log("Unsubscribing: " + user_name);
     });
     users = _.reject(users, function(u){ return u.user_name == user_name;
     }); 
-    user = _.find(users, function(u) {
-      return u.user_name == user_name;
-    });
+  });
+});
+
+app.get('/delete_listed_user/:uid/:vuname', function(req, res) {
+// Administrator deletes a user account
+  cookies = new Cookies(req, res);
+  user_name = cookies.get('user_name').trim().replace("%40","@");
+  password = cookies.get('password').trim().replace("%40","@");
+  password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+  user = _.find(users, function(u) {
+    return u.user_name == user_name;
+  });
+  if (!user) {
+    res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+    res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Error!</title></head><body style='background-color:#99D9EA;padding:8px;" + 
+      "font-family:" + font + ";font-size:" + font_size + "px'>Sorry, something went wrong! The user was not deleted!</body></html>");
+    return;
+  }
+
+  if ((user.admin_status != 1) || (password_hash != user.password_hash)) {
+    res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+    res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>User deletion denied!</title></head><body style='background-color:#99D9EA;padding:8px;" + 
+      "font-family:" + font + ";font-size:" + font_size + "px'>Sorry, you cannot delete the user!</body></html>");
+    return;
+  }
+
+  if (cookies.get('font_family')) { // Font is changeable
+    font = cookies.get('font_family') + ", Helvetica";
+  } else {
+    font = "Helvetica";
+  }
+  if (cookies.get('font_size')) { // Text size can be adjusted, especially for the vision-impaired
+    font_size = cookies.get('font_size');
+  } else {
+    font_size = FONTSIZE;
+  }
+
+// Administrator deletes a listed user
+  var del_user_id = req.params.uid;
+  var del_user_uname = req.params.vuname;
+  var client = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
+  client.query("USE " + DATABASE_NAME);
+  client.query("DELETE FROM " + DATABASE_TABLE + " WHERE id = ?", [del_user_id], function (err, results, fields) {
+    if (err) {
+      throw err;
+    } else {
+      res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+      res.end("<!DOCTYPE html><html><head><title>Tweat Delete</title><body onload=\"alert('The account of " + 
+        "Username " + del_user_uname + " (ID #" + del_user_id + ") has been deleted.');" + 
+        "window.close();\"><h1><b style='font-size:" + 
+        "72px;color:red;background-color:violet'>&nbsp;Tweater&nbsp;</b></h1><h1 style='text-align:center'>" +
+        "<a href='/' onclick=\"location.replace('/');\">If you're not redirected to Tweater in a few seconds" +
+        ", please click here.</a></h1></body></html>");
+    }
+    client.end();
   });
 });
 
@@ -2113,8 +2365,8 @@ function get_home_page(req, res) {
     
       // X button to delete Tweat
                 tweat_list += "&nbsp;&nbsp;<img src='/users/xdel.png' style='position:relative;top:-1px' onclick='" + 
-      "if (confirm(\"Are you sure you want to delete this Tweat?:  " + no_quote_tweat + 
-    "...\")) {location.replace(\"/delete_tweat/" + tid + "\");}' />";
+      "if (confirm(\"Are you sure you want to delete this Tweat?:\\n  " + no_quote_tweat + 
+    "...\")) {window.open(\"/delete_tweat/" + tid + "\");}' />";
               }
               tweat_list += "</p></div></div>";
             }
@@ -2406,7 +2658,7 @@ function display_tweats(req, res) {
 '     $("#tweat").val($("#tweat").val().replace(/(http\\S+)/gi, \'<img src="$1" />\'));\n' + 
 '   }\n' + 
 '   function viewUser(user) { // Show another user\'s Public Page (profile)\n' + 
-'     window.open("view_user_name/" + user + "/0");\n' + 
+'     window.open("view_user_name/" + user);\n' + 
 '   }\n' + 
 '   function settings() { // Change password or email address\n' + 
 '     var chosen = prompt("Would you like to change your password or your email address? " + ' + 
@@ -2702,7 +2954,7 @@ function main_init(req, res) {
 '      <li role="presentation" class="btn btn-danger"><a href="/user/signout" onclick="signOut();"' + 
 '        style="color:lightgray">Sign Out</a></li>' + 
 '     <li role="presentation" class="btn btn-info">' + 
-'        <a href="/view_user_name/' + user_name + '/1" target="_blank">Public Page</a>' + 
+'        <a href="/view_user_name/' + user_name + '" target="_blank">Public Page</a>' + 
 '      </li>' + 
 '    </ul>' + 
 '</nav>';
@@ -2728,7 +2980,7 @@ function main_init(req, res) {
 '      <li role="presentation" class="btn btn-danger"><a href="signout.html" onclick="signOut();"' + 
 '        style="color:lightgray">Sign Out</a></li>' + 
 '     <li role="presentation" class="btn btn-info">' + 
-'        <a href="view_user_name/' + user_name + '/1" style="width:105px" target="_blank">Public Page</a>' + 
+'        <a href="view_user_name/' + user_name + '" style="width:105px" target="_blank">Public Page</a>' + 
 '      </li>' + 
 '    </ul>' + 
 '</nav>';
@@ -2754,7 +3006,7 @@ function main_init(req, res) {
 '      <li role="presentation" class="btn btn-danger"><a href="signout.html" onclick="signOut();"' + 
 '        style="color:lightgray">Sign Out</a></li>' + 
 '     <li role="presentation" class="btn btn-info">' + 
-'        <a href="view_user_name/' + user_name + '/1" style="width:105px" target="_blank">Public Page</a>' + 
+'        <a href="view_user_name/' + user_name + '" style="width:105px" target="_blank">Public Page</a>' + 
 '      </li>' + 
 '    </ul>' + 
 '</nav>';
@@ -2915,15 +3167,19 @@ console.log("un:"+ user_name);
         client3.query("DELETE FROM tweats WHERE id = ? LIMIT 1", [tid], function (err3, results3, fields3) {
           if (err3) {
             message = "ERROR: Tweat not deleted! Sorry, but something went wrong.<br />" + 
-          "You may try to delete the Tweat again. ";
+              "You may try to delete the Tweat again. ";
             throw err3;
           } else {
             message = "Tweat #" + tid + " was deleted.";
           }
-          //res.writeHead(200, {'Content-Type': 'text/html' });
-          //sign_in_to_account(req, res);
           client3.end();
-          display_delete_message(req, res);
+          res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+          res.end("<!DOCTYPE html><html><head><title>Tweat Delete</title><body onload=\"alert('" + message + 
+            "');window.close();\"><h1><b style='font-size:" + 
+            "72px;color:red;background-color:violet'>&nbsp;Tweater&nbsp;</b></h1><h1 style='text-align:center'>" +
+            "<a href='/' onclick=\"location.replace('/');\">If you're not redirected to Tweater in a few " +
+            "seconds, please click here.</a></h1></body></html>");
+          message = "";
         });
       } else {
 
@@ -2936,10 +3192,13 @@ console.log("un:"+ user_name);
           } else {
             message = "The Tweat was deleted.";
           }
-          //res.writeHead(200, {'Content-Type': 'text/html' });
-          //sign_in_to_account(req, res);
           client3.end();
-          display_delete_message(req, res);
+          res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+          res.end("<!DOCTYPE html><html><head><title>Tweat Delete</title><body onload=\"alert('" + message + 
+            "');window.close();\"><h1><b style='font-size:" + 
+            "72px;color:red;background-color:violet'>&nbsp;Tweater&nbsp;</b></h1><h1 style='text-align:center'>" +
+            "<a href='/' onclick=\"location.replace('/');\">If you're not redirected to Tweater in a few " +
+            "seconds, please click here.</a></h1></body></html>");
           message = "";
         });
       }
@@ -3660,12 +3919,12 @@ function all_users_display(req, res) {
           "/" + vname + "\");' />&nbsp;&nbsp;<img src='/users/unfollow.png' class='user' onclick='" +
           "window.open(\"/unfollow/" + vuname + "/" + vname + "\");' />&nbsp;&nbsp;" +
           "<a style='a:link{color:#000000};a:vlink{color:#990099};a:alink{color:#999900};" +
-          "a:hlink{color:#000099};' href='/view_user_name/" + vuname + "/0' target='_blank'>" + vname +
+          "a:hlink{color:#000099};' href='/view_user_name/" + vuname + "' target='_blank'>" + vname +
           " (Username: " + vuname + ")</a>");
 // X button for administrator to delete Tweat
         if (admin) {
           res.write("&nbsp;&nbsp;<img src='/users/xdel.png' class='user' onclick='if (confirm(\"Are you " +
-            "sure you want to delete this user?:  " + vname + " (Username: " + vuname + "; User ID: " +
+            "sure you want to delete this user?:\\n  " + vname + " (Username: " + vuname + "; User ID: " +
             uid + ")\")) {window.open(\"/delete_listed_user/" + uid + "/" + vuname + "\")}' />");
         }
         res.write("</li>");
@@ -3674,15 +3933,6 @@ function all_users_display(req, res) {
     res.end("</ul><br /><br /></body></html>");  
     client.end();
   });
-}
-
-function display_delete_message(req, res) {
-  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
-  res.end("<!DOCTYPE html><html><head><title>Tweat Delete</title><body onload=\"alert('The Tweat was " + 
-    "deleted.');location.replace('/');\"><h1><b style='font-size:" + 
-    "72px;color:red;background-color:violet'>&nbsp;Tweater&nbsp;</b></h1><h1 style='text-align:center'>" +
-    "<a href='/' onclick=\"location.replace('/');\">If you're not redirected to Tweater in a few seconds" +
-    ", please click here.</a></h1></body></html>");
 }
 
 exports.start = start;
