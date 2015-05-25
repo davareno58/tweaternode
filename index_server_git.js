@@ -1,3 +1,4 @@
+// Use JSDoc style comments.
 //res.redirect('back');
 // Be sure to update the users array when changing user DB, e.g. pw change.
 // res.setHeader('Location', '/');
@@ -23,15 +24,14 @@ var f = new Myfunc();
 console.log(f.parse("hi there")); 
 */
 
-// fix utf8 encoding problem
-// Use JSDoc style comments:
 /**
  * @fileOverview Tweater Twitter-like social media application.
  * @version 2.0
  * @author <a href="mailto:davareno58@gmail.com">David K. Crandall</a>
  * @see <a href="http://crandall.altervista.org/tweater">Tweater</a>.
  *
- * Initialize constants.
+ * Initialize constants:
+ *
  * @constant {string} CRYPT_SALT Salt for encryption.
  * @constant {string} DATABASE_HOST Database host.
  * @constant {string} DATABASE_NAME Database name.
@@ -194,15 +194,18 @@ user = "";
 user_name = "";
 user_rows = {0:{"interests":""}};
 
-// External JavaScripts HTML and old MSIE shim
-
+/**
+ * External JavaScripts HTML and old MSIE shim.
+ */
   SCRIPTS_EXTERNAL = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/' +
 'bootstrap.min.css"><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-' +
 'theme.min.css"><script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>' + 
 '<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>' + 
 '<!--[if lt IE 9]><script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]-->';
 
-// Turing test JavaScript against robots
+/**
+ * Turing test JavaScript against robots.
+ */
   turing = '<SCRIPT LANGUAGE="JavaScript">' + 
 '  function turingsetup() {' + 
 '    var firstnumber = Math.floor((Math.random() * 9) + 1);' + 
@@ -213,7 +216,9 @@ user_rows = {0:{"interests":""}};
 '  };' + 
 '  </SCRIPT>';
 
-// Tweat email with Tweaty email picture encoded
+/**
+ * Tweaty email picture encoded for emails.
+ */
 var tweamail = '<img src="data:image/png;base64,\
 iVBORw0KGgoAAAANSUhEUgAAAQIAAADXCAYAAADxy194AAAAAXNSR0IArs4c6QAAAARnQU1BAACx\
 jwv8YQUAAAAJcEhZcwAAEnQAABJ0Ad5mH3gAAA02SURBVHhe7d3bceW4EYDhkQPwo1PYEBySw3Bt\
@@ -278,8 +283,14 @@ K8gt4JaF2vrvCRCBNQgBkmoWbO8irY0BEViHEKAotWhnLdBcEAjAeoQAABcLARACAC+EAAAhAEAI\
 ALwQAgCEAAAhAPBCCAAQAgCEAMALIQBACAAQAgAvhAAAIQBACAC8EAIAhADAjx//B5dJmJEF5LkZ\
 AAAAAElFTkSuQmCC" alt="Tweaty" style="float:left">';
 
+/**
+ * Help page HTML.
+ */
 help_html = '<ul><li>To show a list of all users, just click the User Search button at the right.</li><li>Click your browser\'s Back button to go back to previous page(s).</li><li>To update your page or to remove red messages, click on Home at the top left<br />(or your browser\'s Refresh button).</li><li>Cookies and JavaScript must be enabled for some functions.</li><li>The User Search searches for names, usernames, information and interests,<br />and has a limit of 10 search words per search.</li><li>In a Boolean Search, at least the first term must be filled in.</li><li>Wildcards may be used in Hashtag Searches and Boolean Searches:<br /> ? for any one character, and * for any zero or more characters.</li><li>The Limit button at the right sets the number of Tweats shown and the number<br />of Search Results.</li><li>To turn on Chat Mode, click the green Start Chat button at the right.<br /> It will turn into a red Stop Chat button. In Chat Mode, the Tweats will be<br /> redisplayed every ten seconds, so any Tweats sent by someone<br /> you\'re following will appear automatically without having to click Home<br /> to reload the page. If the person you\'re following is also following you,<br /> and he\'s in Chat Mode, your new Tweats should appear automatically<br /> every ten seconds on his page as well, so you can have a real-time<br /> text conversation in Chat Mode. Actually, several people who are all following each other<br /> and are all in Chat Mode can have a multi-person conversation! In Chat Mode, any picture<br /> will be moved to the bottom of the page, and only the ten most recent Tweats are displayed.<br /> If you don\'t send a Tweat for five minutes, Chat Mode will be turned off automatically,<br /> and you would have to click Start Chat to restart it. Tweats sent in Chat Mode will be deleted<br /> automatically after 24 hours, so they can\'t have hashtags, and no email notifications<br /> are sent with these Tweats.</li><li>To post a picture by using a URL beginning with "http", type or paste it into the Tweat textbox,<br /> and then click the Pic button before pressing Enter.</li><li>To add a hashtag to a Tweat, just include the # sign followed by the hashtag,<br /> such as #popmusic (with no spaces between multiple words). Only one hashtag<br /> can be used in each Tweat, but you could post the same Tweat twice<br />with different hashtags, theoretically...</li></ul></body></html>';
 
+/**
+ * HTML heredocs.
+ */
 upload_picture_html = heredoc(function() {/*
 <!DOCTYPE html>
 <HTML>
@@ -366,16 +377,24 @@ signout_html = heredoc(function() {/*
 </HTML>
 */});
 
-app.use(morgan('dev')); // development tracing
+app.use(morgan('dev')); // development tracing.
 app.use(bodyParser.urlencoded({extended: true, keepExtensions: true, uploadDir: __dirname + '/pictures' }));
-app.use(busboy({ highWaterMark: 2 * 1024 * 1024, limits: { fileSize: 10 * 1024 * 1024 } })); 
+app.use(busboy({ highWaterMark: 2 * 1024 * 1024, limits: { fileSize: 10 * 1024 * 1024 } })); // Picture upload size limit.
+
+/**
+ * Set up pictures folder redirect.
+ */
 app.use('/users', express.static('pictures')); // 2 static files paths, e.g. for images or CSS
 app.use('/hashtag_search_results/*/*.png', express.static('pictures'));
 app.use('/user_search_results/*.png', express.static('pictures'));
+app.use('/change_password/pictures/*.png', express.static('pictures'));
+app.use('/new_email_address/pictures/*.png', express.static('pictures'));
 app.use('/*', express.static('pictures'));
 //app.use('/users/tweat_delete/*.jpg', express.static('pictures'));
 
-// Get all users
+/**
+ * Read all users into users array.
+ */
 var client = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
 client.query("USE " + DATABASE_NAME);
 client.query("SET NAMES 'utf8'");
@@ -389,7 +408,10 @@ client.query("SELECT * FROM " + DATABASE_TABLE, function (err, results, fields) 
   }
 });
 
-app.get('/', function(req, res) { // Sign-In or Register Page
+app.get('/', function(req, res) {
+/**
+ * Display Sign-In or Register page.
+ */
 console.log("sign/reg");
   cookies = new Cookies(req, res);
 console.log("user_name:" + cookies.get('user_name'));
@@ -459,13 +481,16 @@ console.log("pw:" + cookies.get('password'));
   sign_in_or_register(req, res, "");
 });
 
-app.get('/message/:msg', function(req, res) {
+/*app.get('/message/:msg', function(req, res) {
   message = req.params.msg;
   res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
   res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><meta http-equiv='refresh' content='10'><title>Chat Mode Timeout</title></head><body style='color:black;background-color:#c8bfe7;padding:8px;font-family:" + font + ";font-size:" + font_size + "px'>" + message + "</body></html>");
-});
+});*/
 
-app.get('/error', function(req, res) { // Sign-In or Register error message
+app.get('/error', function(req, res) {
+/**
+ * Display Sign-In or Register page with error message.
+ */
 console.log("sign/reg");
   message = req.param("message");
   if (message) {
@@ -475,7 +500,10 @@ console.log("sign/reg error: " + message);
   sign_in_or_register(req, res, message);
 });
 
-app.get('/get_tweats/:name', function(req, res) { // Chat Mode reading of Tweats from database
+app.get('/get_tweats/:name', function(req, res) {
+/**
+ * Read Tweats from database in Chat Mode.
+ */
   cookies = new Cookies(req, res);
   user_name = cookies.get('user_name').replace("%40", "@");
   var name_shown = req.params.name.replace(/\+/g, " ");
@@ -572,7 +600,7 @@ console.log("chat iframe 1");
           }
           }
           res.write("<tr><td style='vertical-align:top;text-align:right'><b>" + 
-            wordwrap(myrow_name.replace(/%20/g, " ").replace(/%2F/gi,"/"), 40, '<br />', true) + 
+            wordwrap(myrow_name.replace(/%20/g, " "), 40, '<br />', true) + 
             "</b>:&nbsp;&nbsp;</td><td>" + 
             wordwrap(myrow_tweat.replace(/%20/g, " "), tweat_width, '<br />', true));
           if (myrow_name == name_shown) {
@@ -599,19 +627,21 @@ console.log("chat iframe 1");
       client.end();
     }
   });
-  //res.end();
 });
 
-app.get('/users', function(req, res) {
+/*app.get('/users', function(req, res) {
   res.send({ success: true, users: users});
   var us = new Buffer(JSON.stringify(users), 'ascii').toString('utf8');
   res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
   res.end("<!DOCTYPE html><html><head><meta http-equiv=Content-Type content='text/html; charset=UTF-8' /><title>Users Test!!</title></head><body>año.<br />"+us+"</body></html>");
 console.log("success: true");
 console.log("users:" + us);
-});
+});*/
 
 app.get('/delete_tweat/:tid', function(req, res) {
+/**
+ * Delete Tweat.
+ */
   tid = req.params.tid;
 console.log("delete_tweat:" + tid);
   delete_tweat(req, res);
@@ -620,6 +650,9 @@ console.log("delete_tweat:" + tid);
 });
 
 app.get('/user/signout', function(req, res) {
+/**
+ * Sign user out.
+ */
   cookies = new Cookies(req, res);
   res.cookie('user_name', '');
   res.cookie('password', '');
@@ -629,6 +662,9 @@ app.get('/user/signout', function(req, res) {
 });
 
 app.get('/help', function(req, res) {
+/**
+ * Display Tweater help page.
+ */
   res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
   res.end('<!DOCTYPE html><html><head><title>Tweater Help</title><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css"><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css"><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script><body style="background-color:#99D9EA;font-size:' + font_size + 'px"><div><a href="' + SELF_NAME + '" style="font-size:' + 
 bigfont + 'px;color:red;background-color:#990099"><b>&nbsp;Tweater Help&nbsp;</b></a></div><img src="/users/tweatyquestion.png" style="float:right" />' + help_html);
@@ -663,6 +699,9 @@ console.log("año."+tweats[22].tweat);
 });*/
 
 app.get('/upload_picture', function(req, res) {
+/**
+ * Display picture upload form.
+ */
 console.log("upload");
   res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
   res.end(upload_picture_html);
@@ -670,14 +709,19 @@ console.log("upload");
 });
 
 app.post('/upload_picture_uploading', function(req, res) {
+/**
+ * Process picture uploading.
+ */
   upload_picture_uploading(req, res);
 });
 
 app.post('/post_tweat', function(req, res) {
+/**
+ * Post new Tweat to database.
+ */
   var tweat_post = req.body;
   tweat = tweat_post.tweat;
 
-//Post new Tweat to database
   if (tweat) {
 console.log('Tweat fd: ', tweat);
     cookies = new Cookies(req, res);
@@ -691,16 +735,19 @@ console.log('Tweat fd: ', tweat);
 });
 
 app.post('/user/signin', function(req, res) {
+/**
+ * Sign user in.
+ */
   var given_user = req.body;
 console.log("user:", JSON.stringify(given_user));
-  given_user.user_name = given_user.user_name.trim().toLowerCase().replace(/\s+/g, " ").replace("%40","@").replace(/\//g, "%2F");
+  given_user.user_name = given_user.user_name.trim().toLowerCase().replace(/\s+/g, " ").replace("%40","@");
   message = "";
   forgot_password = given_user.forgot_password;
 // Forgotten password, so email password reset code if email address exists or username appears to be email
   if (forgot_password == "on") {
 console.log("forgot pw");
     user_name = given_user.user_name;
-    password_forgotten(res);
+    password_forgotten(req, res);
     return;
   }
   if (!given_user.user_name || !given_user.password) {
@@ -709,7 +756,7 @@ console.log("forgot pw");
     message += "Error: Both the password and username are required. "
   }
   user_name = given_user.user_name;
-  password = given_user.password.replace("%40","@").replace(/\//g, "%2F");
+  password = given_user.password.replace("%40","@");
   password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
   user = _.find(users, function(u) {
     return u.user_name == given_user.user_name;
@@ -769,7 +816,9 @@ console.log("interests:" + interests);
 });
 
 app.post("/info_update", function(req, res) {
-// Update information and interests
+/**
+ * Update information and interests.
+ */
   cookies = new Cookies(req, res);
 console.log("updating interests of:" + cookies.get('user_name'));
   user_name = cookies.get('user_name').replace("%40", "@");
@@ -967,10 +1016,13 @@ console.log("new_interest:<" +  new_interests_array[new_item] + ">l:" + new_inte
 });
 
 app.post('/user/new', function(req, res) {
+/**
+ * Add new user.
+ */
   var user = req.body;
 // *** Add only A-Z a-z 0-9 ' _ - . @ only chars allowed in un
-  user.user_name = user.user_name.trim().toLowerCase().replace(/\s+/g, " ").replace("%40", "@").replace(/\//g, "%2F");
-  user.name = user.name.trim().replace(/\s+/g, " ").replace("%40", "@").replace(/\//g, "%2F");
+  user.user_name = user.user_name.trim().toLowerCase().replace(/\s+/g, " ").replace("%40", "@");
+  user.name = user.name.trim().replace(/\s+/g, " ").replace("%40", "@");
 console.log("user:", JSON.stringify(user));
   message = "";
 console.log("given new un:" + user.user_name);
@@ -984,6 +1036,16 @@ console.log("given new un:" + user.user_name);
     console.log("success: false");
     console.log("reason: The username \"" + user.user_name + "\" already exists. Please choose another username.");
     message += "Error: The username \"" + user.user_name + "\" already exists. Please choose another username. "
+  }
+  if (user.user_name.indexOf("/") != -1) {
+    console.log("success: false");
+    console.log("reason: The username cannot contain a slash.");
+    message += "Error: The username cannot contain a slash. "
+  }
+  if (user.name.indexOf("/") != -1) {
+    console.log("success: false");
+    console.log("reason: The name cannot contain a slash.");
+    message += "Error: The name cannot contain a slash. "
   }
   if (user.new_user_password.length < 6) {
     console.log("success: false");
@@ -1080,7 +1142,9 @@ console.log("New user: " + user_name);
 });
 
 app.get('/hashtag_search_results/:hashtag', function(req, res) {
-// Display Hashtag Search Results
+/**
+ * Display Hashtag Search Results.
+ */
 console.log("hashtag search:" + req.params.hashtag);
   cookies = new Cookies(req, res);
   if (cookies.get('font_size')) {
@@ -1158,8 +1222,8 @@ console.log("hashtag search:" + req.params.hashtag);
         res.write("<h2>" + num_rows + " Hashtag Search Results for \"" + hashtag_win + "\"<br />" +
         "(Note: Wildcards ? and * may be used):</h2><ul>");
         for (ii = 0; ii < results.length; ii++) {
-          var vname = results[ii]['name'].replace(/%2F/gi,"/");
-          var vuname = results[ii]['user_name'].replace(/%2F/gi,"/");
+          var vname = results[ii]['name'];
+          var vuname = results[ii]['user_name'];
           var tweat = results[ii]['tweat'];
           var tid = results[ii]['id'];
           res.write("<li><img src='/users/follow.png' class='user' onclick='window.open(\"/follow/" + vuname + "/" + 
@@ -1193,7 +1257,10 @@ console.log("hashtag search:" + req.params.hashtag);
 });
 
 app.post('/user_search_results', function(req, res) {
-// Search for other users by any information and interests
+/**
+ * Search for other users by any information and interests. If multiple search terms are 
+ * given, the terms are joined with a boolean OR.
+ */
   var search_any = req.body.search_any;
 console.log("user search");
   cookies = new Cookies(req, res);
@@ -1283,8 +1350,8 @@ console.log("search:"+search_any_array[search_item]);
           res.write("<h3>Search Word \"" + search_any_array[report_count] + "\":</h3>");
           var sublist_count = 0;
           for (var myrow = 0; myrow < results.length; myrow ++) {
-            vname = results[myrow]['name'].replace(/%2F/gi,"/");
-            vuname = results[myrow]['user_name'].replace(/%2F/gi,"/");
+            vname = results[myrow]['name'];
+            vuname = results[myrow]['user_name'];
             uid = results[myrow]['uid'];
             sublist_count++;
             cases_count++;
@@ -1336,7 +1403,10 @@ console.log("search:"+search_any_array[search_item]);
 });
 
 app.post('/boolean_search_results', function(req, res) {
-// Search for other users by any information and interests using a boolean search with at most two search terms connected by AND, OR or NOT
+/**
+ * Search for other users by any information and interests using a boolean search with 
+ * at most two search terms connected by AND, OR or NOT.
+ */
   cookies = new Cookies(req, res);
   if (cookies.get('font_size')) {
     font_size = cookies.get('font_size');
@@ -1470,8 +1540,8 @@ app.post('/boolean_search_results', function(req, res) {
       }
     
       for (var myrow = 0; myrow < results.length; myrow ++) {
-        vname = results[myrow]['name'].replace(/%2F/gi,"/");
-        vuname = results[myrow]['user_name'].replace(/%2F/gi,"/");
+        vname = results[myrow]['name'];
+        vuname = results[myrow]['user_name'];
         uid = results[myrow]['uid'];
         res.write("<li><img src='/users/follow.png' class='user' onclick='window.open(\"/follow/" + vuname + 
           "/" + vname + "\");' />&nbsp;&nbsp;<img src='/users/unfollow.png' class='user' onclick='" +
@@ -1494,7 +1564,9 @@ app.post('/boolean_search_results', function(req, res) {
 });
 
 app.get('/view_user_name/:user_name', function(req, res) {
-// Show some chosen user's Public Page (profile)
+/**
+ * Display a chosen user's Public Page (profile).
+ */
   cookies = new Cookies(req, res);
   user_name = cookies.get('user_name').trim().replace("%40","@");
   password = cookies.get('password').trim().replace("%40","@");
@@ -1615,7 +1687,9 @@ app.get('/view_user_name/:user_name', function(req, res) {
 });
 
 app.get('/follow/:vuname/:vname', function(req, res) {
-// Follow another user
+/**
+ * Follow another user.
+ */
   cookies = new Cookies(req, res);
   user_name = cookies.get('user_name').trim().replace("%40","@");
   password = cookies.get('password').trim().replace("%40","@");
@@ -1625,6 +1699,19 @@ app.get('/follow/:vuname/:vname', function(req, res) {
   user = _.find(users, function(u) {
     return ((u.user_name == user_name) && (u.password_hash == password_hash));
   });
+
+  if (cookies.get('font_size')) {
+    font_size = cookies.get('font_size');
+  } else {
+    font_size = FONTSIZE;
+  }
+  bigfont = font_size * 1.5;
+    
+  if (cookies.get('font_family')) {
+    font = cookies.get('font_family') + ", Helvetica";
+  } else {
+    font = "Helvetica";
+  }
 
   res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
   if (!user) {
@@ -1690,7 +1777,9 @@ app.get('/follow/:vuname/:vname', function(req, res) {
 });
 
 app.get('/unfollow/:vuname/:vname', function(req, res) {
-// Unfollow another user
+/**
+ * Unfollow another user.
+ */
   cookies = new Cookies(req, res);
   user_name = cookies.get('user_name').trim().replace("%40","@");
   password = cookies.get('password').trim().replace("%40","@");
@@ -1700,6 +1789,19 @@ app.get('/unfollow/:vuname/:vname', function(req, res) {
   user = _.find(users, function(u) {
     return ((u.user_name == user_name) && (u.password_hash == password_hash));
   });
+
+  if (cookies.get('font_size')) {
+    font_size = cookies.get('font_size');
+  } else {
+    font_size = FONTSIZE;
+  }
+  bigfont = font_size * 1.5;
+    
+  if (cookies.get('font_family')) {
+    font = cookies.get('font_family') + ", Helvetica";
+  } else {
+    font = "Helvetica";
+  }
 
   res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
   if (!user) {
@@ -1762,6 +1864,353 @@ app.get('/unfollow/:vuname/:vname', function(req, res) {
       "style='background-color:#99D9EA;padding:8px;" + 
       "font-family:" + font + ";font-size:" + font_size + "px'>Sorry, something went wrong! The user " + 
       followed_one + " is not unfollowed! You may try again.</body></html>");
+  }
+});
+
+app.get('/change_password', function(req, res) {
+/**
+ * Display password change form.
+ */
+  if (cookies.get('font_size')) {
+    font_size = cookies.get('font_size');
+  } else {
+    font_size = FONTSIZE;
+  }
+  bigfont = font_size * 1.5;
+    
+  if (cookies.get('font_family')) {
+    font = cookies.get('font_family') + ", Helvetica";
+  } else {
+    font = "Helvetica";
+  }
+
+  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  res.end("<!DOCTYPE html><html><head><title>Tweater Password Change</title>" +
+    "<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css'>" +
+    "<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css'>" +
+    "<script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js'></script>" +
+    "<style>.center {margin-left: auto;margin-right: auto;width: 20%;background-color: #ee6600;}</style></head>" +
+    "<body style='color:black;background-color:#c0c0f0;padding:8px;" +
+    "font-family:" + font + ",Courier New;font-size:" + bigfont + "px'><div class='center'><p>&nbsp;&nbsp;" +
+    "Tweater Account&nbsp;</p><p>&nbsp;Password Change:&nbsp;</p><span><form action='/new_password' " +
+    "method='POST' autocomplete='off'>" +
+    "<div><fieldset class='fieldset-auto-width' style='float:left'><input type='text' style='display:none'>" +
+    "<input type='password' style='display:none'><div class='input-group'><input type='password' " +
+    "class='form-control' placeholder='Old Password' name='old_password' autocomplete='off' size='32'></div>" +
+    "<div class='input-group'><input type='password' class='form-control' placeholder='New Password' " + 
+    "name='new_password' autocomplete='off' size='32'></div><div class='input-group'>" +
+    "<input type='password' class='form-control' placeholder='Confirm New Password' name='password_confirm' " + 
+    "autocomplete='off' size=32></div><button type='submit' class='btn btn-success'>Change Password</button>" +
+    "</fieldset></div></span></form></div></body></html>");
+});
+
+app.post('/new_password', function(req, res) {
+/**
+ * Process changing password.
+ */
+  cookies = new Cookies(req, res);
+  user_name = cookies.get('user_name').trim().replace("%40","@");
+  old_password = req.body.old_password.trim().replace("%40","@");
+  new_password = req.body.new_password.trim().replace("%40","@");
+  password_confirm = req.body.password_confirm.trim().replace("%40","@");
+  old_password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(old_password).digest("base64");
+  new_password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(new_password).digest("base64");
+
+  user = _.find(users, function(u) {
+    return ((u.user_name == user_name) && (u.password_hash == old_password_hash));
+  });
+
+  if (cookies.get('font_size')) {
+    font_size = cookies.get('font_size');
+  } else {
+    font_size = FONTSIZE;
+  }
+  bigfont = font_size * 1.5;
+    
+  if (cookies.get('font_family')) {
+    font = cookies.get('font_family') + ", Helvetica";
+  } else {
+    font = "Helvetica";
+  }
+
+  if (!user) {
+    res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+    res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Password Change Error</title></head>" + 
+      "<body style='background-color:#99D9EA;padding:8px;font-family:" + font + ";font-size:" + font_size + 
+      "px'>Sorry, the old password given is not correct! Remember that passwords are case-sensitive. You may " +
+      "try again to change your password.</body></html>");
+    return;
+  }
+  if (new_password != password_confirm) {
+    res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+    res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Password Change Error</title></head>" + 
+      "<body style='background-color:#99D9EA;padding:8px;font-family:" + font + ";font-size:" + font_size + 
+      "px'>Sorry, the new password given does not match the password confirmation given! Remember that " +
+      "passwords are case-sensitive. You may try again to change your password.</body></html>");
+    return;
+  }
+  if (new_password.length < 6) {
+    res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+    res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Password Change Error</title></head>" + 
+      "<body style='background-color:#99D9EA;padding:8px;font-family:" + font + ";font-size:" + font_size + 
+      "px'>Sorry, the new password given isn't long enough. It must have at least 6 characters. You may try " +
+      "again to change your password.</body></html>");
+    return;
+  }
+
+  var client = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
+  client.query("USE " + DATABASE_NAME);
+  client.query("SET NAMES 'utf8'");
+  client.query("UPDATE " + DATABASE_TABLE + " SET password_hash = ? WHERE user_name = ? AND password_hash = ?", [new_password_hash, user_name, old_password_hash], function (err, results, fields) {
+    if (err) {
+      throw err;
+    } else {
+      var client2 = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
+      client2.query("USE " + DATABASE_NAME);
+      client2.query("SET NAMES 'utf8'");
+      client2.query("SELECT * from " + DATABASE_TABLE + " WHERE user_name = ? AND password_hash = ?", [user_name, new_password_hash], function (err2, results2, fields2) {
+        if (err2) {
+          throw err2;
+        } else {
+          if (!results2[0]['user_name']) {
+            res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+            res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Password Change Error</title>" + 
+              "</head><body style='background-color:#99D9EA;padding:8px;font-family:" + font + ";font-size:" +
+              font_size + "px'>Sorry, your password has not been changed. Remember that passwords are " +
+              "case-sensitive, and be sure your caps lock isn't on.</body></html>");
+            client2.end();
+            return;
+          }
+          var date = new Date();
+          if (cookies.get('stay_logged_in') == "on") {
+            date.setTime(date.getTime() + (86400000 * 365 * 67));
+          } else {
+            date.setTime(date.getTime());
+          }
+          res.cookie('user_name', user_name, {expires: date});
+          res.cookie('password', new_password, {expires: date});
+          user.password_hash = new_password_hash;
+
+          email = results2[0]['email'];
+          if ((!email) && (results2[0]['user_name'].indexOf("@") > 0) && (results2[0]['user_name'].indexOf(".") > results2[0]['user_name'].indexOf("@") + 1)) {
+            email = results2[0]['user_name'];
+          }
+          if (email) {
+            transporter.sendMail({from: 'Tweater <davareno58@gmail.com>', to: email, subject: 
+              results2[0]['name'] + ', your Tweater password has been changed',
+              html: '<html><body style="background-color:#99D9EA;padding:8px;font-family:' + font + 
+              ';font-size:' + font_size + 'px">Hello ' + results2[0]['name'] + ',<br /><br />' + 
+              '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Your Tweater account password has just been changed. If this was ' +
+              'not done by you, you may let us know at crandadk@aol.com<br /><br />' + 
+              '<a href="http://' + DATABASE_HOST + '/' + '" style="font-size:40px;color:red;' + 
+              'background-color:violet;float:left;text-decoration:none"><b>&nbsp;Tweater&nbsp;</b></a>' + 
+              '&nbsp;&nbsp;&nbsp;&nbsp;' + tweamail + '<br /><br /><br /><br /><br /><br /><br /><br /><br />' + 
+              '<br /><br /><br /><br /><br /><br /><br /><br /><br /><hr />How to unsubscribe to Tweat ' + 
+              'Notifications:<br /><br />If you don\'t want to receive Tweat Notifications, ' + 
+              'sign in to <a href="http://' + DATABASE_HOST + '/">your Tweater ' + 
+              'Account</a> and click on the Tweat Notifications button at the left. ' + 
+              'A pop-up prompt will appear. Type the word No and click on OK.'});
+          }
+          res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+          res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Password Changed!</title></head>" + 
+            "<body style='background-color:#99D9EA;padding:8px;font-family:" + font + ";font-size:" + font_size +
+            "px'>Your password has been changed to the new password given. <a href='/'>Please click <b>here</b>" +
+            " to return to your Home page.</a></body></html>");
+          client2.end();
+        }
+      });
+      client.end();
+    }
+  });
+});
+
+app.get('/new_email_address', function(req, res) {
+/**
+ * Display new email address form.
+ */
+  if (cookies.get('font_size')) {
+    font_size = cookies.get('font_size');
+  } else {
+    font_size = FONTSIZE;
+  }
+  bigfont = font_size * 1.5;
+    
+  if (cookies.get('font_family')) {
+    font = cookies.get('font_family') + ", Helvetica";
+  } else {
+    font = "Helvetica";
+  }
+
+  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  res.end("<!DOCTYPE html><html><head><title>Tweater New Email Address</title>" +
+    "<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css'>" +
+    "<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css'>" +
+    "<script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js'></script>" +
+    "<style>.center {margin-left: auto;margin-right: auto;width: 20%;background-color: #ee6600;}</style></head>" +
+    "<body style='color:black;background-color:#c0c0f0;padding:8px;'><div style='" +
+    "font-family:" + font + ",Courier New;font-size:" + bigfont + "px'><div class='center'><p>&nbsp;&nbsp;" +
+    "&nbsp;Tweater Account&nbsp;</p><p>&nbsp;New Email Address:</p><span><form action='/new_email' " +
+    "method='POST' autocomplete='off'>" +
+    "<div><fieldset class='fieldset-auto-width' style='float:left'><input type='text' style='display:none'>" +
+    "<input type='password' style='display:none'><div class='input-group'><input type='text' " +
+    "class='form-control' placeholder='New Email Address' name='email' autocomplete='off' size='50'></div>" +
+    "<div class='input-group'><input type='text' class='form-control' placeholder='Confirm Email Address' " +
+    "name='email_confirm' autocomplete='off' size='50'></div><div class='input-group'><input type='password' " +
+    "class='form-control' placeholder='Password' name='password' autocomplete='off' size='32'></div>" +
+    "<button type='submit' class='btn btn-success'>Submit New Email Address</button></fieldset></div></span>" +
+    "</form></div></div><br /><br /><br /><br /><br /><br /><br /><br /><p class='center' style='font-size:" +
+    font_size + "px;width:40%;padding:8px'>(If you want to delete your email address completely, leave the two " +
+    "email address fields above blank, and just enter your password before clicking Submit.)</p></body></html>");
+});
+
+app.post('/new_email', function(req, res) {
+/**
+ * Processing new email address.
+ */
+  cookies = new Cookies(req, res);
+  user_name = cookies.get('user_name').trim().replace("%40","@");
+  email = req.body.email.trim().replace("%40","@") || null;
+  email_confirm = req.body.email_confirm.trim().replace("%40","@") || null;
+  password = req.body.password.trim().replace("%40","@");
+  password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+
+  user = _.find(users, function(u) {
+    return ((u.user_name == user_name) && (u.password_hash == password_hash));
+  });
+
+  if (cookies.get('font_size')) {
+    font_size = cookies.get('font_size');
+  } else {
+    font_size = FONTSIZE;
+  }
+  bigfont = font_size * 1.5;
+    
+  if (cookies.get('font_family')) {
+    font = cookies.get('font_family') + ", Helvetica";
+  } else {
+    font = "Helvetica";
+  }
+
+  if (!user) {
+    res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+    res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>New Email Error</title></head>" + 
+      "<body style='background-color:#99D9EA;padding:8px;font-family:" + font + ";font-size:" + font_size + 
+      "px'>Sorry, the password given is not correct! Remember that passwords are case-sensitive. You may " +
+      "try again to enter your new email address.</body></html>");
+    return;
+  }
+  if (email != email_confirm) {
+    res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+    res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>New Email Error</title></head>" + 
+      "<body style='background-color:#99D9EA;padding:8px;font-family:" + font + ";font-size:" + font_size + 
+      "px'>Sorry, the new email address given does not match the email address confirmation given! Remember " +
+      "to type both exactly the same. You may try again to enter your new email address.</body></html>");
+    return;
+  }
+
+  var old_email = user.email;
+  var client = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
+  client.query("USE " + DATABASE_NAME);
+  client.query("SET NAMES 'utf8'");
+  client.query("UPDATE " + DATABASE_TABLE + " SET email = ? WHERE user_name = ? AND password_hash = ?", [email, user_name, password_hash], function (err, results, fields) {
+    if (err) {
+      throw err;
+    } else {
+      var client2 = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
+      client2.query("USE " + DATABASE_NAME);
+      client2.query("SET NAMES 'utf8'");
+      client2.query("SELECT * from " + DATABASE_TABLE + " WHERE user_name = ? AND password_hash = ?", [user_name, password_hash], function (err2, results2, fields2) {
+        if (err2) {
+          throw err2;
+        } else {
+          if (!results2[0]['user_name']) {
+            res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+            res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>New Email Address Error</title>" + 
+              "</head><body style='background-color:#99D9EA;padding:8px;font-family:" + font + ";font-size:" +
+              font_size + "px'>Sorry, your new email address has not been entered. You may try again.</body></html>");
+            client2.end();
+            return;
+          }
+
+          user.email = email;          
+          if (old_email) {
+            transporter.sendMail({from: 'Tweater <davareno58@gmail.com>', to: old_email, subject: 
+              results2[0]['name'] + ', your Tweater Email Address has been changed',
+              html: '<html><body style="background-color:#99D9EA;padding:8px;font-family:' + font + 
+              ';font-size:' + font_size + 'px">Hello ' + results2[0]['name'] + ',<br /><br />' + 
+              '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Your Tweater account email address has just been changed. ' +
+              'If this was not done by you, you may let us know at crandadk@aol.com<br /><br />' + 
+              '<a href="http://' + DATABASE_HOST + '/' + '" style="font-size:40px;color:red;' + 
+              'background-color:violet;float:left;text-decoration:none"><b>&nbsp;Tweater&nbsp;</b></a>' + 
+              '&nbsp;&nbsp;&nbsp;&nbsp;' + tweamail + '<br /><br /><br /><br /><br /><br /><br /><br /><br />' + 
+              '<br /><br /><br /><br /><br /><br /><br /><br /><br /><hr />How to unsubscribe to Tweat ' + 
+              'Notifications:<br /><br />If you don\'t want to receive Tweat Notifications, ' + 
+              'sign in to <a href="http://' + DATABASE_HOST + '/">your Tweater ' + 
+              'Account</a> and click on the Tweat Notifications button at the left. ' + 
+              'A pop-up prompt will appear. Type the word No and click on OK.'});
+          }
+          res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+          res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>New Email Address Entered!</title>" + 
+            "</head><body style='background-color:#99D9EA;padding:8px;font-family:" + font + ";font-size:" + 
+            font_size + "px'>Your email address has been changed to " + email + ". <a onclick='window.close()' " +
+            "href='' >Please click <b>here</b> to close this window.</a></body></html>");
+          client2.end();
+        }
+      });
+      client.end();
+    }
+  });
+});
+
+app.get('/change_notify/:enable', function(req, res) {
+/**
+ * Change Tweat Email Notifications preference.
+ */
+  if (req.params.enable == 'true') {
+    tweat_notify = 1;
+    message = "Tweat Notifications are now enabled.";
+  } else {
+    tweat_notify = 0;
+    message = "Tweat Notifications are now DISABLED.";
+  }
+  user_name = cookies.get('user_name').trim().replace("%40","@");
+  password = cookies.get('password').trim().replace("%40","@");
+  password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+
+  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  user = _.find(users, function(u) {
+    return ((u.user_name == user_name) && (u.password_hash == password_hash));
+  });
+
+  if (user) {
+    var client4 = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
+    client4.query("USE " + DATABASE_NAME);
+    client4.query("SET NAMES 'utf8'");
+    client4.query("UPDATE users SET tweat_notify = ? WHERE user_name = ? AND binary password_hash = ?" + 
+      " LIMIT 1", [tweat_notify, user_name, password_hash], function (err4, results4, fields4) {
+      if (err4) {
+        res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Tweat Notification Error</title>" + 
+          "</head><body style='background-color:#99D9EA;padding:8px;font-family:" + font + ";font-size:" +
+          font_size + "px'>ERROR: Tweat Notifications was not updated! Sorry, but something went wrong. " +
+          "You may try again to change your Tweat Notifications. <a onclick='window.close()' " +
+          "href='' >Please click <b>here</b> to close this window.</a></body></html>");
+
+      } else {
+        res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Tweat Notifications Changed</title>" + 
+          "</head><body style='background-color:#99D9EA;padding:8px;font-family:" + font + ";font-size:" +
+          font_size + "px'>" + message + " <a onclick='window.close()' " +
+          "href='' >Please click <b>here</b> to close this window.</a></body></html>");
+        user.tweat_notify = tweat_notify;
+        message = "";
+      }
+      client4.end();
+    });
+  } else {
+    res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Tweat Notification Error</title></head>" + 
+      "<body style='background-color:#99D9EA;padding:8px;font-family:" + font + ";font-size:" + font_size + 
+      "px'>Sorry, the password given is not correct! Remember that passwords are case-sensitive. You may " +
+      "try again to change your Tweat Notifications. <a onclick='window.close()' " +
+      "href='' >Please click <b>here</b> to close this window.</a></body></html>");
   }
 });
 
@@ -2052,7 +2501,7 @@ console.log("post_body:", post_body);
           if (forgot_password == "on") {
             //res.writeHead(200, {'Content-Type': 'text/html' });
 console.log("forgot pw");
-            password_forgotten(res);
+            password_forgotten(req, res);
             return;
 
           } else {
@@ -2286,7 +2735,7 @@ function get_home_page(req, res) {
       if (chat == "true") {
     console.log("chat mode.");
     // Display Tweats as Chat in iframe
-        name = name.replace(" ", "+").replace(/\//g, "%2F");
+        name = name.replace(" ", "+");
         tweat_list += "<iframe id='tweats_iframe' src='/get_tweats/" + name + 
     "' style='width:1250px;height:590px;position:absolute;" + 
           "left:10px'><p>Your browser doesn't support iframes!</p></iframe>" + 
@@ -2349,7 +2798,7 @@ function get_home_page(req, res) {
     
               tweat_list += "<div class='row' style='color:black'><div class='col-md-3 text-right' " + 
                 "style='word-wrap: break-word; margin-right: 1em; position:relative; left:46px'><b>" + 
-                wordwrap(myrow_name.replace(/%20/g, " ").replace(/%2F/gi,"/"), 40, '<br />', true) + 
+                wordwrap(myrow_name.replace(/%20/g, " "), 40, '<br />', true) + 
                 "</b>:</div><div class='col-md-9' style='margin-left: -2em; position:relative; left:46px'><p>" + 
                 wordwrap(myrow_tweat.replace(/%20/g, " "), tweat_width, '<br />', true);
               if ((myrow_name == name) || (user.admin_status == 1)) { // 892
@@ -2404,7 +2853,12 @@ function display_tweats(req, res) {
   } else {
     staySignedIn = "";
   }
-
+  if (tweat_notify == 1) {
+    var notify = "checked";
+  } else {
+    var notify = "unchecked";
+  }
+console.log("notify:"+notify);
 //var decoded_tweat_list = new Buffer(JSON.stringify(tweat_list), 'ascii').toString('utf8');
   var decoded_tweat_list = tweat_list.replace(/\\"/g, '"').replace(/\\'/g, "'");
 //res.write("<!DOCTYPE html><html><head>zip</head><body>" + tweat_list + "hr</body></html>");
@@ -2425,7 +2879,8 @@ function display_tweats(req, res) {
 'var saveWidth = $("#picture").width(); // Save image size\n' + 
 'var picHtml = "<img id=\'picture\' src=\'/users/' + picture_url + '\' />";\n' + 
 ' // Image tag for above Tweats\n' + 
-'var picHtmlBottom = "<img id=\'picture\' src=\'/users/' + picture_url + '\' style=\'position:relative;top:-20px;padding-bottom:20px\' />"; // Image tag for below Tweats\n' + 
+'var picHtmlBottom = "<img id=\'picture\' src=\'/users/' + picture_url + '\' style=\'position:relative;' +
+'top:-20px;padding-bottom:20px\' />"; // Image tag for below Tweats\n' + 
 'var color = "' + text_color + '";\n' + 
 'var pic_scale = ' + pic_scale + ';\n' + 
 'var pic_position = "' + pic_position + '";\n' + 
@@ -2664,21 +3119,19 @@ function display_tweats(req, res) {
 '     var chosen = prompt("Would you like to change your password or your email address? " + ' + 
 '"(password or email)", "");\n' + 
 '     if (chosen.toLowerCase() == "password") {\n' + 
-'       window.open("change_password.html?return=' + ret + '");\n' + 
+'       window.open("/change_password");\n' + 
 '     } else if (chosen.toLowerCase().substring(0,5) == "email") {\n' + 
-'       var emailAddress = prompt("Enter your new email address or just press OK to have no email " + ' + 
-'"address:", "");\n' + 
-'       location.replace("' + SELF_NAME + '?new_email_address=" + emailAddress);\n' + 
+'       window.open("/new_email_address");\n' + 
 '     }\n' + 
 '   }\n' + 
 '   function notifications() { // Set email Tweat Notifications preference\n' + 
 '     var notify = prompt("Would you like email Tweat Notifications of Tweats posted by people " + ' + 
-'       "you\'re following (If so, add apache@crandall.altervista.org to your email contact list)? " + ' + 
-'"(Yes or No)", "");\n' + 
+'       "you\'re following? (Yes or No) (If so, add apache@crandall.altervista.org to your email contact list.)' +
+'", "");\n' + 
 '     if (notify.trim().toLowerCase().substr(0,1) == "y") {\n' + 
-'       location.replace("' + SELF_NAME + '?notify=1");\n' + 
+'       window.open("/change_notify/true");\n' + 
 '     } else {\n' + 
-'       location.replace("' + SELF_NAME + '?notify=0");  \n' + 
+'       window.open("/change_notify/false");  \n' + 
 '     }\n' + 
 '   }\n' + 
 '   function hashtagSearch() { // Search Tweats by hashtag (subject), e.g. #popmusic\n' + 
@@ -2769,8 +3222,11 @@ margin_left + ';margin-right: 4px;padding: 10px;border: 4px outset violet">' +
 'onchange="viewUser(this.value)">' + 
 '          <option>Followed Users:</option>' + followed_ones_list + 
 '        </select></form>' + 
-'        <div style="text-align:center"><button type="button" class="btn btn-warning" ' + 
-'          onclick="notifications();">Notifications</button>&nbsp;' + followers_count + ' Followers</div></div>' + 
+'        <div style="text-align:center">' +
+'        <div class="checkbox">' +
+'        <label><input type="checkbox" value="" ' + notify + ' onclick="notifications();"><span ' +
+'        style="background-color:orange">Notify by email</span>&nbsp;&nbsp;' + followers_count +
+' Followers</label></div></div></div>' + 
 '        <form action="/info_update" method="POST" role="form" id="intinfo" name="intinfo">' + 
 '        <span>' + 
 '        <div>' + 
@@ -3190,7 +3646,8 @@ console.log("un:"+ user_name);
           "You may try to delete the Tweat again. ";
             throw err3;
           } else {
-            message = "The Tweat was deleted.";
+            message = "The Tweat was deleted. To erase it from your screen, click the Home button at the top " +
+              "left to reload the page.";
           }
           client3.end();
           res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
@@ -3206,7 +3663,7 @@ console.log("un:"+ user_name);
   });
 }
 
-function password_forgotten(res) {
+function password_forgotten(req, res) {
 /**
  * Process the requested email reset of forgotten password.
  * @param {string} res Response from server to client.
@@ -3403,24 +3860,18 @@ console.log("tw:" + tweat);
            tweamail + '<br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />' + 
           '<br /><br /><br /><br /><br /><br /><hr />How to unsubscribe to Tweat Notifications:<br />' + 
           '<br />If you don\'t want to receive Tweat Notifications, ' + 
-          'sign in to <a href="http://' + DATABASE_HOST + '/' + SELF_NAME + '">your Tweater ' + 
+          'sign in to <a href="http://' + DATABASE_HOST + '/">your Tweater ' + 
           'Account</a> and click on the Tweat Notifications button at the left. ' + 
           'A pop-up prompt will appear. Type the word No and click on OK.'});
           }
         }
-      }); //
-      client2.end();
+        client2.end();
+      });
     }
 console.log("reloading home");
-    /*user_rows[0]['interests'] = interests;
-    picture_ext = null;
-    picture_url = "nophoto.jpg";*/
+    client.end();
     get_home_page(req, res);
-    //res.writeHead(200, {'Content-Type': 'text/html' });
-    //sign_in_to_account(req, res);
-  }); //
-  client.end();
-  //res.end(); 
+  });
 }
 
 function sign_in_to_account(req, res) {
@@ -3711,13 +4162,13 @@ console.log("msg:" + message);
 '<input type="text" style="display:none">' + 
 '<input type="password" style="display:none">' + 
 '<div class="input-group"><input type="text" class="form-control" autocomplete="off" ' + 
-'  placeholder="Desired Username" name="user_name" value="' + user_name + '" maxlength="50" size="50"></div>' + 
+'  placeholder="Desired Username (letters and numerals only)" name="user_name" value="' + user_name + '" maxlength="50" size="50"></div>' + 
 '<div class="input-group"><input type="password" class="form-control" autocomplete="off" ' + 
 '  placeholder="Password: Minimum 6 Characters" name="new_user_password" maxlength="32" size="32"></div>' + 
 '<div class="input-group"><input type="password" class="form-control" autocomplete="off" ' + 
 '  placeholder="Confirm Password" name="password_confirm" maxlength="32" size="32"></div>' + 
 '<div class="input-group"><input type="text" class="form-control" autocomplete="off" ' + 
-'  placeholder="Name" name="name" value="' + name + '" maxlength="60" size="60"></div>' + 
+'  placeholder="Name (letters and numerals only)" name="name" value="' + name + '" maxlength="60" size="60"></div>' + 
 '<div class="input-group"><input type="text" class="form-control" autocomplete="off" ' + 
 'placeholder="Optional: Your Email for Tweat Notifications" name="email" value="' + email + '" ' + 
 '  autocomplete="off" maxlength="50" size="50"></div>' + 
@@ -3912,8 +4363,8 @@ function all_users_display(req, res) {
       throw err;
     } else {
       for (var myrow = 0; myrow < results.length; myrow ++) {
-        vname = results[myrow]['name'].replace(/%2F/gi,"/");
-        vuname = results[myrow]['user_name'].replace(/%2F/gi,"/");
+        vname = results[myrow]['name'];
+        vuname = results[myrow]['user_name'];
         uid = results[myrow]['uid'];
         res.write("<li><img src='/users/follow.png' class='user' onclick='window.open(\"/follow/" + vuname + 
           "/" + vname + "\");' />&nbsp;&nbsp;<img src='/users/unfollow.png' class='user' onclick='" +
