@@ -1,29 +1,3 @@
-// Use JSDoc style comments.
-//res.redirect('back');
-// Be sure to update the users array when changing user DB, e.g. pw change.
-// res.setHeader('Location', '/');
-// res.location('/customers/' + inst._id);
-
-// Express version of my Tweater app by David K. Crandall, (C) 2015.
-// --*** When registering, change whitespace in name to a single space with .replace(/\s+/g, " ").
-/* To put funcs in separate files:
-File: myfunc.js:
-//Myfunc constructor:
-var Myfunc = function() {
-};
-// Description here.
-Myfunc.prototype.parse = function(text) {
-...
-};
-module.exports = Myfunc;
-(end of file myfunc.js)
------------
-Used thus in another file:
-var Myfunc = require('./myfunc'); 
-var f = new Myfunc();
-console.log(f.parse("hi there")); 
-*/
-
 /**
  * @fileOverview Tweater Twitter-like social media application.
  * @version 2.0
@@ -45,18 +19,17 @@ console.log(f.parse("hi there"));
  * @constant {string} TWEATMAXSIZE Maximum number of characters allowed in a Tweat message.
  * @constant {string} USERNAME Database username.
  */
-
 CRYPT_SALT = "x";
 DATABASE_HOST = '192.168.0.3';
 DATABASE_NAME = "my_crandall";
 DATABASE_TABLE = "users";
-EMAIL_PASSWORD = 'z'; // --*** Email password
+EMAIL_PASSWORD = 'y';
 FONTSIZE = "18"; // pixels
 MY_PATH = 'c:/users/dave/node/tweater_node';
-PASSWORD = 'y'; // --*** Database password
+PASSWORD = 'z'; // Database password
 SELF_NAME = "/";
 SITE_ROOT = "/";
-TWEATMAXSIZE = "250"; // characters
+TWEATMAXSIZE = "250"; // Maximum size of Tweat in characters
 USERNAME = "crandall";
 
 // Initialize requires
@@ -67,7 +40,6 @@ cookieParser = require("cookie-parser") ;
 Cookies = require("cookies"); 
 crypto = require("crypto"); // encryption
 express = require("express");
-//formidable = require("formidable"); 
 fs = require("fs"); // file system
 heredoc = require("heredoc");
 http = require("http");
@@ -79,13 +51,8 @@ url = require("url");
 utf8 = require("utf8"); // character encoding
 util = require("util"); 
 var _ = require("underscore");
-//Cookies = require("../node_modules/cookies");
-//heredoc = require("../node_modules/heredoc");
-//nodemailer = require("../node_modules/nodemailer"); // for sending email
 
-transporter = nodemailer.createTransport({ service: 'Gmail', auth: { user: 'davareno58@gmail.com', pass: EMAIL_PASSWORD } }); // ***
-console.log("argv:" + process.argv.toString());
-//parsedURL = {}; // not needed
+transporter = nodemailer.createTransport({ service: 'Gmail', auth: { user: 'davareno58@gmail.com', pass: EMAIL_PASSWORD } });
 
 /**
  * Create globals:
@@ -161,7 +128,7 @@ interests_words = "";
 interests_array = [];
 margin_left = "";
 message = "";
-name = ""; // client name
+name = ""; // user's name
 password = "";
 password_hash = "";
 password_reset_hash = "";
@@ -174,7 +141,6 @@ port = process.env.PORT || 8888;
 post_body = "";
 query = {};
 result = {};
-ret = ""; // browser version
 shown_limit = 50;
 sign_in_width = "";
 signout_html = "";
@@ -390,7 +356,6 @@ app.use('/user_search_results/*.png', express.static('pictures'));
 app.use('/change_password/pictures/*.png', express.static('pictures'));
 app.use('/new_email_address/pictures/*.png', express.static('pictures'));
 app.use('/*', express.static('pictures'));
-//app.use('/users/tweat_delete/*.jpg', express.static('pictures'));
 
 /**
  * Read all users into users array.
@@ -403,7 +368,6 @@ client.query("SELECT * FROM " + DATABASE_TABLE, function (err, results, fields) 
     throw err;
   } else {
     users = results;
-//console.log("All users:" + JSON.stringify(users));
     client.end();
   }
 });
@@ -412,14 +376,10 @@ app.get('/', function(req, res) {
 /**
  * Display Sign-In or Register page.
  */
-console.log("sign/reg");
   cookies = new Cookies(req, res);
-console.log("user_name:" + cookies.get('user_name'));
-console.log("pw:" + cookies.get('password'));
   if (cookies.get('user_name') && cookies.get('password')) {
     var given_user_name = cookies.get('user_name').replace("%40","@");
     password = cookies.get('password').replace("%40","@");
-    ret = '_chrome'; // Chrome browser version
     title_position = "right: -77px;";
     sign_in_width = "width:506px;";
     margin_left = "margin-left: -43px;";
@@ -438,22 +398,14 @@ console.log("pw:" + cookies.get('password'));
       name = user.name;
       if (stay_logged_in == "on") {
 // Set cookies to remain signed in.
-        //var date2 = new Date();
         var date2 = new Date();
         date2.setTime(date2.getTime() + (86400000 * 365 * 67));
-        cookies.set('user_name', user_name, date2); // Set cookies to be deleted
+        cookies.set('user_name', user_name, date2);
         cookies.set('password', password, date2);
-        //res.cookie('user_name', user_name, {expires: (date2.getTime() + 86400000 * 365 * 67)});
-        //res.cookie('password', password, {expires: (date2.getTime() + 86400000 * 365 * 67)});
       } else {
 // Set session cookies
         cookies.set('user_name', user_name); // Set cookies to be deleted
         cookies.set('password', password);
-
-        //var date3 = new Date();
-        //res.cookie('user_name', user_name);
-        //res.cookie('password', password);
-//res.cookie('chat', "false");
       }
       id = user.id;
       picture_ext = user.picture_ext;
@@ -481,22 +433,14 @@ console.log("pw:" + cookies.get('password'));
   sign_in_or_register(req, res, "");
 });
 
-/*app.get('/message/:msg', function(req, res) {
-  message = req.params.msg;
-  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
-  res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><meta http-equiv='refresh' content='10'><title>Chat Mode Timeout</title></head><body style='color:black;background-color:#c8bfe7;padding:8px;font-family:" + font + ";font-size:" + font_size + "px'>" + message + "</body></html>");
-});*/
-
 app.get('/error', function(req, res) {
 /**
  * Display Sign-In or Register page with error message.
  */
-console.log("sign/reg");
   message = req.param("message");
   if (message) {
     message = message.replace(/\+/g, " ");
   }
-console.log("sign/reg error: " + message);
   sign_in_or_register(req, res, message);
 });
 
@@ -507,8 +451,6 @@ app.get('/get_tweats/:name', function(req, res) {
   cookies = new Cookies(req, res);
   user_name = cookies.get('user_name').replace("%40", "@");
   var name_shown = req.params.name.replace(/\+/g, " ");
-console.log("start get tweats for " + user_name);
-  //ret = req.params.ret;
   shown_limit = 10;
   timeout_message = "";
   if (cookies.get('chat_timeout')) {
@@ -516,18 +458,13 @@ console.log("start get tweats for " + user_name);
     if (chat_timeout != 'end') {
       var refresh = "<meta http-equiv='refresh' content='10'>";
       var date = new Date();
-//console.log("getTime:" + date.getTime());
-//console.log("chat_timeout:" + chat_timeout);
-//console.log("diff:" + (chat_timeout - date.getTime()));
       if (date.getTime() > chat_timeout) {
 // Automatically turn off chat mode
-console.log("chat auto-off");
         res.cookie('chat', 'false', {maxAge: 7200000});
         res.cookie('chat_timeout', 'end', {maxAge: 7200000});
         timeout_message = "<p style='color:red'>Chat Mode has timed out and has been turned off. The timeout is five minutes. To restart Chat Mode, click the Home button at the top left to reload the page and then click Start Chat at the right.</p>";
         refresh = "";
       } else if (date.getTime() >= chat_timeout - 60000) {
-console.log("chat warn soon auto-off");
         timeout_message = "<p style='color:red'>Timeout Warning: If you don't post a Tweat within one minute, Chat Mode will be turned off.</p>";
       }
     } else {
@@ -551,7 +488,6 @@ console.log("chat warn soon auto-off");
     tweat_width = Math.floor(1600 / font_size);
   }
   res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
-console.log("wrote head; reading db");
   var client = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
   client.query("USE " + DATABASE_NAME);
   client.query("SET NAMES 'utf8'");
@@ -563,10 +499,8 @@ console.log("wrote head; reading db");
     } else {
 
 // Display Tweats in iframe with 10 second refresh for chat mode
-console.log("chat iframe 1");
       res.write("<!DOCTYPE html><html><head><meta charset='utf-8' />" + refresh + "<title>Tweats:</title></head><body style='color:black;background-color:#c8bfe7;padding:8px;font-family:" + font + ";font-size:" + font_size + "px'>" + timeout_message + "<table>");
       timeout_message = "";
-//console.log("results:"+JSON.stringify(results));
       if (results.length) {
         for (var row = 0; row < results.length; row++) {
           myrow = results[row];
@@ -629,21 +563,11 @@ console.log("chat iframe 1");
   });
 });
 
-/*app.get('/users', function(req, res) {
-  res.send({ success: true, users: users});
-  var us = new Buffer(JSON.stringify(users), 'ascii').toString('utf8');
-  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
-  res.end("<!DOCTYPE html><html><head><meta http-equiv=Content-Type content='text/html; charset=UTF-8' /><title>Users Test!!</title></head><body>aÃ±o.<br />"+us+"</body></html>");
-console.log("success: true");
-console.log("users:" + us);
-});*/
-
 app.get('/delete_tweat/:tid', function(req, res) {
 /**
  * Delete Tweat.
  */
   tid = req.params.tid;
-console.log("delete_tweat:" + tid);
   delete_tweat(req, res);
   message = "";
   return;
@@ -670,39 +594,10 @@ app.get('/help', function(req, res) {
 bigfont + 'px;color:red;background-color:#990099"><b>&nbsp;Tweater Help&nbsp;</b></a></div><img src="/users/tweatyquestion.png" style="float:right" />' + help_html);
 });
 
-/*app.get('/users/:user_name', function(req, res) {
-  user_name = req.params.user_name.toLowerCase().trim().replace(/\+/g, " ").replace(/\s+/g, " ").replace(/%40/g, "@").replace(/%2B/g, "+");
-
-  user = _.find(users, function(u) {
-    return u.user_name == user_name;
-  });
-
-  if (user) { // Signing-in user found
-    if (picture_ext.length < 1) {
-      picture_url = "nophoto.jpg";
-    } else {
-      picture_url = id + "." + picture_ext;
-    }
-
-    res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
-    show_home_page(req, res);
-  }
-  result = user
-    ? { success: true, user: user}
-    : { success: false, reason: 'user not found: ' + user_name};
-  var tw = new Buffer(JSON.stringify(users)+JSON.stringify(tweats), 'ascii').toString('utf8');
-  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
-  res.end("<!DOCTYPE html><html><head><meta http-equiv=Content-Type content='text/html; charset=UTF-8' /><title>Test!!</title></head><body>aÃ±o.<br />"+tw+"</body></html>");
-console.log("success:" + result.success);
-console.log("reason:" + result.reason);
-console.log("aÃ±o."+tweats[22].tweat);
-});*/
-
 app.get('/upload_picture', function(req, res) {
 /**
  * Display picture upload form.
  */
-console.log("upload");
   res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
   res.end(upload_picture_html);
   return;
@@ -723,7 +618,6 @@ app.post('/post_tweat', function(req, res) {
   tweat = tweat_post.tweat;
 
   if (tweat) {
-console.log('Tweat fd: ', tweat);
     cookies = new Cookies(req, res);
     var date = new Date();
     res.cookie("chat_timeout", (date.getTime() + 300000));
@@ -739,20 +633,16 @@ app.post('/user/signin', function(req, res) {
  * Sign user in.
  */
   var given_user = req.body;
-console.log("user:", JSON.stringify(given_user));
   given_user.user_name = given_user.user_name.trim().toLowerCase().replace(/\s+/g, " ").replace("%40","@");
   message = "";
   forgot_password = given_user.forgot_password;
 // Forgotten password, so email password reset code if email address exists or username appears to be email
   if (forgot_password == "on") {
-console.log("forgot pw");
     user_name = given_user.user_name;
     password_forgotten(req, res);
     return;
   }
   if (!given_user.user_name || !given_user.password) {
-    console.log("success: false");
-    console.log("reason: Missing password or username.");
     message += "Error: Both the password and username are required. "
   }
   user_name = given_user.user_name;
@@ -763,12 +653,9 @@ console.log("forgot pw");
   });
 
   if (!user) { // Signing-in user not found
-console.log("users:"+JSON.stringify(users));
     message += 'Error: "' + given_user.user_name + '" was not found in ' + DATABASE_TABLE + ' with the password given. ';
   } else {
     if (password_hash != user.password_hash) {
-console.log("pwhash:"+password_hash);
-console.log("upwhash:"+user.password_hash);
       message += "Error: The password is not correct. You may try again. ";
       if (password.toLowerCase() != password) {
         message += "Note: Make sure your caps lock isn't on by accident, since passwords are case sensitive. ";
@@ -784,13 +671,12 @@ console.log("upwhash:"+user.password_hash);
   status = user.admin_status;
   name = user.name;
   interests = user.interests || "";
-console.log("interests:" + interests);
   cookies = new Cookies(req, res);
   if (stay_logged_in == "on") {
 // Set cookies to remain signed in.
     var date = new Date();
     date.setTime(date.getTime() + (86400000 * 365 * 67));
-    res.cookie('user_name', user_name, {expires: date}); // Set cookies to be deleted
+    res.cookie('user_name', user_name, {expires: date});
     res.cookie('password', password, {expires: date});
   } else {
 // Set session cookies
@@ -820,7 +706,6 @@ app.post("/info_update", function(req, res) {
  * Update information and interests.
  */
   cookies = new Cookies(req, res);
-console.log("updating interests of:" + cookies.get('user_name'));
   user_name = cookies.get('user_name').replace("%40", "@");
   password = cookies.get('password').replace("%40", "@");
   password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
@@ -833,7 +718,7 @@ console.log("updating interests of:" + cookies.get('user_name'));
   client8.query("SELECT * FROM " + DATABASE_TABLE + 
     " WHERE ((user_name = ?) OR (email = ?)) AND (binary password_hash = ?)", [user_name, user_name, password_hash], function (err8, results8, fields8) {
     if (err8) {
-      //throw err8;
+      throw err8;
     }
     if (!results8.length) {
       res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
@@ -869,19 +754,14 @@ console.log("updating interests of:" + cookies.get('user_name'));
       client.query("USE " + DATABASE_NAME);
       try {
         var result = utf8.decode(interests);
-  //console.log('a valid utf8 (from ', interests, '): ', result);
         client.query("SET NAMES 'utf8'");
       } catch (e) {
-        if (interests) {
-  //console.log('Invalid UTF-8 (', interests, '): ', e);
-        }
       }
       client.query("UPDATE " + DATABASE_TABLE + " SET interests = ? " + 
         "WHERE ((user_name = ?) OR (email = ?)) AND (binary password_hash = ?)", [interests, user_name, user_name, password_hash], function (err, results, fields) {
         if (err) {
           throw err;
         } else {
-          //client.end();
           var client2 = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
           client2.query("USE " + DATABASE_NAME);
           client2.query("SELECT * FROM " + DATABASE_TABLE + 
@@ -896,7 +776,7 @@ console.log("updating interests of:" + cookies.get('user_name'));
               user_name = user_rows[0]['user_name'];
             }
             client2.end();
-  // Build list of old interests for deleting and list of new interests for adding
+// Build list of old interests for deleting and list of new interests for adding
             old_interests = row_interests.toLowerCase().substr(0, 250).replace("-", " ");
             old_interests = strtran(old_interests, '!"#%&()*+,-./:;<=>?[\]^_`{|}~' + 
             '¡¦©«¬­®¯´¶¸»¿', '                                                  ' + 
@@ -920,11 +800,11 @@ console.log("updating interests of:" + cookies.get('user_name'));
             new_interests = new_interests.replace("   ", " ");
             new_interests = new_interests.replace("  ", " ");
             
-        // Add username and name to lists of interests
+// Add username and name to lists of interests
             old_interests = user_name.toLowerCase() + " " + name.toLowerCase() + " " + old_interests;
             new_interests = user_name.toLowerCase() + " " + name.toLowerCase() + " " + new_interests;
         
-        // Create arrays of unique words from interests
+// Create arrays of unique words from interests
             old_interests_array = old_interests.split(" ");
             old_interests_array = old_interests_array.filter(function(item, i, ar){return ar.indexOf(item) === i;});
             new_interests_array = new_interests.split(" ");
@@ -937,22 +817,14 @@ console.log("updating interests of:" + cookies.get('user_name'));
   
             try {
               var result = utf8.decode(old_interests);
-    //console.log('a valid utf8 (from ', old_interests, '): ', result);
               client3.query("SET NAMES 'utf8'");
             } catch (e) {
-              if (old_interests) {
-  console.log('Invalid UTF-8 (', old_interests, '): ', e);
-              }
             }
     
             try {
               var result = utf8.decode(new_interests);
-    //console.log('a valid utf8 (from ', new_interests, '): ', result);
               client3.query("SET NAMES 'utf8'");
             } catch (e) {
-              if (new_interests) {
-  console.log('Invalid UTF-8 (', new_interests, '): ', e);
-              }
             }
   
             client3.query("UPDATE " + DATABASE_TABLE + " SET interests_words = ? " + 
@@ -962,17 +834,16 @@ console.log("updating interests of:" + cookies.get('user_name'));
               }
               client3.end();
   
-  // Add new updated interests to database
+// Add new updated interests to database
               var client4 = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
               client4.query("USE " + DATABASE_NAME);
               for (var new_item = 0; new_item < new_interests_array.length; new_item++) {
-console.log("new_interest:<" +  new_interests_array[new_item] + ">l:" + new_interests_array[new_item].length);
                 if (new_interests_array[new_item] == " ") {
                   continue;
                 }
                 if ((new_interests_array[new_item].length > 0) && (old_interests.indexOf(" " + new_interests_array[new_item] + " ") == -1)) {
   
-                  client4.query("INSERT INTO interests (id, user_name, interest) values(NULL, ?,?)", [user_name, new_interests_array[new_item] ], function (err4, results4, fields4) { // 700
+                  client4.query("INSERT INTO interests (id, user_name, interest) values(NULL, ?,?)", [user_name, new_interests_array[new_item] ], function (err4, results4, fields4) {
                     if (err4) {
                       throw err4;
                     } else {
@@ -982,7 +853,7 @@ console.log("new_interest:<" +  new_interests_array[new_item] + ">l:" + new_inte
               }
               client4.end();
   
-  // Delete old obsolete interests from database
+// Delete old obsolete interests from database
               var client5 = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
               client5.query("USE " + DATABASE_NAME);
   
@@ -999,7 +870,7 @@ console.log("new_interest:<" +  new_interests_array[new_item] + ">l:" + new_inte
                   });
                 }
               }
-              client5.end(); // del if causes err
+              client5.end();
               user.interests = interests;
               user.interests_words = new_interests;
               message = "Interests and Information updated!";
@@ -1020,50 +891,32 @@ app.post('/user/new', function(req, res) {
  * Add new user.
  */
   var user = req.body;
-// *** Add only A-Z a-z 0-9 ' _ - . @ only chars allowed in un
   user.user_name = user.user_name.trim().toLowerCase().replace(/\s+/g, " ").replace("%40", "@");
   user.name = user.name.trim().replace(/\s+/g, " ").replace("%40", "@");
-console.log("user:", JSON.stringify(user));
   message = "";
-console.log("given new un:" + user.user_name);
   if (!user.user_name || !user.name) {
-    console.log("success: false");
-    console.log("reason: Missing name or username.");
     message += "Error: Both the name and username are required. "
   }
   var existing = _.findWhere(users, {user_name: user.user_name}); 
   if (existing) {
-    console.log("success: false");
-    console.log("reason: The username \"" + user.user_name + "\" already exists. Please choose another username.");
     message += "Error: The username \"" + user.user_name + "\" already exists. Please choose another username. "
   }
   if (user.user_name.indexOf("/") != -1) {
-    console.log("success: false");
-    console.log("reason: The username cannot contain a slash.");
     message += "Error: The username cannot contain a slash. "
   }
   if (user.name.indexOf("/") != -1) {
-    console.log("success: false");
-    console.log("reason: The name cannot contain a slash.");
     message += "Error: The name cannot contain a slash. "
   }
   if (user.new_user_password.length < 6) {
-    console.log("success: false");
-    console.log("reason: The password length must be at least six characters.");
     message += "Error: The password must have at least six characters. "
   }
   if (user.new_user_password != user.password_confirm) {
-    console.log("success: false");
-    console.log("reason: The password confirmation doesn't match the password.");
     message += "Error: The password confirmation doesn't match the password. "
   }
   if (parseInt(user.answer_added.trim()) != parseInt(user.given_added.trim())) {
-    console.log("success: false");
-    console.log("reason: The answer to the math question was incorrect. You may try again with a new question below.");
-    message += "Error: The answer to the math question was incorrect. You may try again with a new question below. "
+    message += "Error: The answer to the math question wasn't correct. You may try again with a new question below. "
   }
   if (message) { // Registration Failure
-//console.log("loc:" + message);
     sign_in_or_register(req, res, message);
     return;
   }
@@ -1101,7 +954,6 @@ console.log("given new un:" + user.user_name);
       throw err3;
     } else {
       client3.end();
-console.log("New user: " + user_name);
       var client4 = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
       client4.query("USE " + DATABASE_NAME);
       client4.query("SET NAMES 'utf8'");
@@ -1145,7 +997,6 @@ app.get('/hashtag_search_results/:hashtag', function(req, res) {
 /**
  * Display Hashtag Search Results.
  */
-console.log("hashtag search:" + req.params.hashtag);
   cookies = new Cookies(req, res);
   if (cookies.get('font_size')) {
     font_size = cookies.get('font_size');
@@ -1262,7 +1113,6 @@ app.post('/user_search_results', function(req, res) {
  * given, the terms are joined with a boolean OR.
  */
   var search_any = req.body.search_any;
-console.log("user search");
   cookies = new Cookies(req, res);
   if (cookies.get('font_size')) {
     font_size = cookies.get('font_size');
@@ -1313,15 +1163,12 @@ console.log("user search");
     "padding:8px;font-family:" + font + ";font-size:" + font_size + "px'><h2>User Interests and Information " + 
     "Search Results (Limit " + shown_limit + "):</h2><ul>");
 
-  //search_any = search_any.replace(/\*/g, "%");
-  //search_any = search_any.replace(/\?/g, "_");
   search_any = search_any.toLowerCase().substr(0,250).replace("-", " ");
   search_any = strtran(search_any, ',;+&/', '     ').trim();
   search_any = search_any.replace(/ +/g, " ");
   search_any_array = search_any.split(" ");
 // Create array of unique search terms
   search_any_array = search_any_array.filter(function(item, i, ar){return ar.indexOf(item) === i;});
-console.log("search array:"+search_any_array.join(","));
   search_any = "  " + search_any + " ";
   if (search_any_array.length > 10) {
     res.end("Sorry, there's a limit of 10 search words!</body></html>");
@@ -1336,7 +1183,6 @@ console.log("search array:"+search_any_array.join(","));
   var all_items = "";
   var not_found = false;
   for (var search_item in search_any_array) {
-console.log("search:"+search_any_array[search_item]);
     all_items += " / " + search_any_array[search_item];
     client.query("SELECT i.id, i.user_name, i.interest, u.name, u.id as uid FROM interests AS i " +
       "INNER JOIN users AS u ON i.user_name = u.user_name WHERE i.interest = ? " + 
@@ -1616,7 +1462,6 @@ app.get('/view_user_name/:user_name', function(req, res) {
   client.query("SET NAMES 'utf8'");
   client.query("SELECT * FROM " + DATABASE_TABLE + " WHERE (user_name = ?) LIMIT 1", [view_user_name], function (err, results, fields) {
     if (err) {
-      //client.end();
       throw err;
     } else {
       if (results.length) {
@@ -1664,7 +1509,7 @@ app.get('/view_user_name/:user_name', function(req, res) {
                   
                 }
                 res.write("<p>" + wordwrap(myrow_tweat, tweat_width, '<br />', true));
-    // Red X button for administrator to delete Tweat
+// Red X button for administrator to delete Tweat
                 if (view_admin) {
                   no_quote_tweat = strtran(myrow_tweat.substr(0,80), "\"'\t\r\n\f", "      ");
                   res.write("&nbsp;&nbsp;<img src='/users/xdel.png' style='position:relative;top:-2px' " + 
@@ -2217,7 +2062,6 @@ app.get('/change_notify/:enable', function(req, res) {
 app.get('/user/unsubscribe', function(req, res) { // Process unsubscribe request.
   cookies = new Cookies(req, res);
   user_name = cookies.get('user_name').trim().replace("%40","@");
-console.log("Unsubscribing: " + user_name);
   password = cookies.get('password').trim().replace("%40","@");
   password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
   if (cookies.get('font_family')) { // Font is changeable
@@ -2317,296 +2161,17 @@ app.get('/delete_listed_user/:uid/:vuname', function(req, res) {
 });
 
 app.get('/:what', function(req, res) { // 404 Page not found
-  page_not_found_404(res);
+  page_not_found_404(req, res);
 });
-
-/*app.get('/[^up].*', function(req, res) { // 404 Page not found
-  page_not_found_404(res);
-});
-
-app.get('/user/:what', function(req, res) { // 404 Page not found
-  page_not_found_404(res);
-});*/
 
 app.get('/users/:what', function(req, res) { // 404 Page not found
-  page_not_found_404(res);
+  page_not_found_404(req, res);
 });
 
 app.get('/pictures/:what', function(req, res) { // 404 Page not found
-  page_not_found_404(res);
+  page_not_found_404(req, res);
 });
-
-app.listen(port);
-
-function start(route) {
-
-  function onRequest(req, res) {
-/**
- * Process page requests from client.
- * @param {string} req Request from client to server.
- * @param {string} res Response from server to client.
- */
-   var request = url.parse(req.url, true); 
-   var action = request.pathname;
-   query = request.query;
-   cookies = new Cookies(req, res);
-
-// get a cookie value:
-// c = cookies.get('user_name');
-// set a cookie value:
-// cookies.set('user_name', 'john'); // line 200
-console.log("action:" + action);
-
-   try {
-    if (action.substring(action.length - 4) == '.png') { 
-      var img = fs.readFileSync(MY_PATH + action); 
-      res.writeHead(200, {'Content-Type': 'image/png' }); 
-      res.end(img, 'binary');
-    } else if (action.substring(action.length - 4) == '.jpg') { 
-      var img = fs.readFileSync(MY_PATH + action); 
-      res.writeHead(200, {'Content-Type': 'image/jpg' }); 
-      res.end(img, 'binary');
-    } else if (action.substring(action.length - 5) == '.jpeg') { 
-      var img = fs.readFileSync(MY_PATH + action); 
-      res.writeHead(200, {'Content-Type': 'image/jpeg' }); 
-      res.end(img, 'binary');
-    } else if (action.substring(action.length - 4) == '.gif') { 
-      var img = fs.readFileSync(MY_PATH + action); 
-      res.writeHead(200, {'Content-Type': 'image/gif' }); 
-      res.end(img, 'binary');
-    } else if (action.substring(action.length - 3) == '.js') { 
-      var js = fs.readFileSync(MY_PATH + action); 
-      res.writeHead(200, {'Content-Type': 'application/javascript' }); 
-      res.end(js);
-    } else if (action.substring(action.length - 4) == '.css') { 
-      var css = fs.readFileSync(MY_PATH + action); 
-      res.writeHead(200, {'Content-Type': 'text/css' }); 
-      res.end(css);
-    } else if ((action == '/') || (action == '') || (action == '/index.html')) {
-      res.writeHead(200, {'Content-Type': 'text/html' });
-      res.end(index_html);
-    } else if (action == '/help.html') {
-      res.writeHead(200, {'Content-Type': 'text/html' });
-      res.end(help_html_setup());
-    } else if (action == '/home_msie.html') {
-      ret = '_msie'; // Internet Explorer browser version
-      title_position = "right: -153px;";
-      sign_in_width = "";
-      margin_left = "margin-left: -53px;";
-      interests_position = "left:2px;";
-      interests_width = "";
-
-      main_init(req, res); // Initialize main variables and also data from cookies
-
-    } else if (action == '/home_firefox.html') {
-      ret = '_firefox'; // Firefox browser version
-      title_position = "right: -77px;";
-      sign_in_width = "width:506px;";
-      margin_left = "margin-left: -43px;";
-      interests_position = "left:3px;";
-      interests_width = "width:310px;position:relative;top:2px";
-
-      main_init(req, res); // Initialize main variables and also data from cookies
-
-    } else if (action == '/home_chrome.html') {
-console.log("headers:" + req.headers);
-/*if (!undefined) {console.log("undefined is false");}
-if (!null) {console.log("null is false");}
-if (!"") {console.log("empty string \"\" is false");}
-if (!0) {console.log("Number 0 is false");}
-if ("0") {console.log("String \"0\" is true");}
-if ("false") {console.log("String \"false\" is true");}
-if (!"false") {console.log("String \"false\" is false");}
-if ([]) {console.log("empty array is true");}
-if ([0]) {console.log("array [0] is true");}
-if ([null]) {console.log("array [null] is true");}
-if ([undefined]) {console.log("array [undefined] is true");}
-if ({}) {console.log("empty object {} is true");}
-if ({x:0}) {console.log("object {x:0} is true");}
-if ({x:null}) {console.log("object {x:null} is true");}
-if ({x:undefined}) {console.log("object {x:undefined} is true");}*/
-      ret = '_chrome'; // Chrome browser version of Home page
-      title_position = "right: -77px;";
-      sign_in_width = "width:506px;";
-      margin_left = "margin-left: -43px;";
-      interests_position = "left:3px;";
-      interests_width = "width:310px;position:relative;top:2px";
-
-      main_init(req, res); // Initialize main variables and also data from cookies
-
-      //var date = new Date();
-      //date.setTime(date.getTime() + (86400000 * 365 * 67));
-var date = new Date();
-console.log(SELF_NAME);
-
-// Process unsubscribe request
-      if ((cookies.get('unsub')) && (cookies.get('user_name')) && (cookies.get('password'))) {
-        res.writeHead(200, {'Content-Type': 'text/html' });
-console.log("unsub");
-        unsubscribe_processing();
-      }
-
-// Get automatic signin data with username and password stored in cookies
-      if (true) {//((cookies.get('user_name')) && (cookies.get('password')) && (cookies.get('password') != '')) {
-console.log("sign in auto");
-
-        sign_in_auto_get_credentials();
-      }
-
-console.log('http://' + req.headers.host + req.url);
-//parsedURL = url.parse('http://' + req.headers.host +  req.url, true);
-
-      if ((req.method == "GET") && (req.url.indexOf("?") > 0)) { // GET data is in URL querystring
-console.log("GET recvd");
-
-// Change Tweat Email Notifications preference
-        if (query['notify']) {
-console.log("notify chgd");
-          change_email_notify();
-        }
-
-// Change Email Address
-        if (query['new_email_address']) {
-console.log("email adr chgd");
-          change_email_address();
-        }
-
-// Delete Tweat
-        if (query['delete_tweat']) {
-          delete_tweat(res); // 370
-          return;
-        }
-
-      } else if (req.method !== "POST") { // Data is in COOKIES
-console.log("Non-POST recvd");
-
-          //res.end('<html><body>' + message + '<form action="' + SELF_NAME + '" method="GET"><input type="text" name="delete_tweat"><input type="submit" value="send"></form></body></html>');
-      }
-      
-      if (req.method == "POST") {// Data is POST data
-console.log("POST recvd");
-        post_body = "";
-        req.on('data', function handlePost(postchunk) { // Accumulate POST data // line 300
-          post_body += postchunk;
-        });
-
-        req.on("end", function() { // Process POST data
-console.log("post_body:", post_body);
-  //console.log("post_body un:", get_post("user_name"));
-
-          forgot_password = get_post('forgot_password');
-//user_name = "crandadk@aol.com"; // --*** test unm
-
-  // Forgotten password, so email password reset code if email address exists or username appears to be email
-          if (forgot_password == "on") {
-            //res.writeHead(200, {'Content-Type': 'text/html' });
-console.log("forgot pw");
-            password_forgotten(req, res);
-            return;
-
-          } else {
-// Get manual POST signin data
-            //sign_in_manual_get_credentials();
-          }
-
-          tweat = get_post('tweat');
-
-  //Post new Tweat to database
-          if (tweat) {
-  console.log('post_body : ', post_body);
-  console.log('Tweat fd2: ', tweat);
-
-//get_post('name').replace("+", " ");
-            post_tweat(req, res);
-            return;
-
-          } else {
-// Sign in
-/*// Set user cookies
-            if (stay_logged_in == "on") {
-              var date = new Date();
-              date.setTime(date.getTime() + (86400000 * 365 * 67));
-              cookies.set('user_name', user_name, date); // Set cookies to be deleted
-              cookies.set('password', password, date);
-console.log('Setting stay-signed-in cookie');
-            } else {
-//console.log('setting signin cookies for: ', user_name);
-              //cookies.set('user_name', user_name, 0);
-              //cookies.set('password', password, 0);
-            }*/
-
-// Write main response header
-console.log('main');
-            res.writeHead(200, {'Content-Type': 'text/html' });
-            sign_in_to_account(req, res);
-
-/*res.end('<html><body><form method="POST"><input type="text" name="user_name"><input type="password" name="password"><input type="text" name="tweat"><input type="submit" value="send"></form></body></html>');*/
-          }
-  console.log("message: ", message);    
-        }); //
-      }
-      //return;
-
-// Sign in
-// Set user cookies
-      if (stay_logged_in == "on") { // 440
-        var date = new Date();
-        date.setTime(date.getTime() + (86400000 * 365 *67));
-        cookies.set('user_name', user_name, date); // Set cookies to be deleted
-        cookies.set('password', password, date);
-console.log('Setting stay-signed-in cookie!');
-      } else {
-//console.log('setting signin cookies for: ', user_name);
-        //cookies.set('user_name', user_name, 0);
-        //cookies.set('password', password, 0);
-      }
-
-// Write main response header
-      res.writeHead(200, {'Content-Type': 'text/html' });
-      sign_in_to_account(req, res);
-
-// Process password reset
-    } else if (action == '/forgot_password.html') {
-      password_reset(req, res);
-
-    } else {
-
-// Display 404 Error: Page not found
-console.log("404");
-      page_not_found_404(res);
-    }
-   } catch(e) {
-console.log("404!");
-     page_not_found_404(res);
-   }
-  }
-  //http.createServer(onRequest).listen(8888);
-  console.log("Server has started.");
-}
           
-function get_post(var_name) { //793
-/**
- * Get variables from Post request.
- * @param {string} var_name Name of posted variable.
- * @returns {string} value of posted variable <var-name>.
- */
-  var patt = new RegExp(var_name + "=([^&]*)");
-  var post = patt.exec(post_body);
-  if (post) {
-    return post[1];
-  }
-  return undefined;
-}
-
-/* Not needed: function get_query(var_name) {
-/-**
- * Get variables from Get request querystring.
- * @param {string} var_name Name of querystring variable.
- * @returns {string} value of querystring variable <var-name>.
- *-/
-  return parsedURL['query'][var_name];
-}*/
-
 function strtran(str, oldchars, newchars) {
 /**
  * Translate given characters to other characters.
@@ -2668,7 +2233,6 @@ function get_home_page(req, res) {
   client6.query("SELECT COUNT(DISTINCT user_name) AS followers_count FROM followed_ones " + 
     "WHERE followed_one = ?", [user_name], function (err6, results6, fields6) {
     if (err6) {
-      //client6.end();
       throw err6;
     }
     var myrow4 = results6;
@@ -2683,7 +2247,6 @@ function get_home_page(req, res) {
       "INNER JOIN users AS u ON f.followed_one = u.user_name WHERE f.followed_one IN " + 
       "(SELECT f.followed_one FROM followed_ones AS f WHERE f.user_name = ?) ORDER BY name", [user_name], function (err7, results7, fields7) {
       if (err7) {
-        //client7.end();
         throw err7;
       } else {
         followed_ones_list = "";
@@ -2697,12 +2260,9 @@ function get_home_page(req, res) {
           }
         }
         client7.end();
-      }
-//console.log(followed_ones_list);
-    
+      }    
       esc_name = name.replace(" ", "+"); // Version of user's name with space(s) changed to + for GET querystring
-    //console.log("chat now:" + chat);
-    // Adjust Chat Mode start/stop button and its action
+// Adjust Chat Mode start/stop button and its action
       if (chat == "true") {
         chat_button = 'danger';
         chat_button_action = 'Stop';
@@ -2729,12 +2289,10 @@ function get_home_page(req, res) {
         staylogged  = "";
       }
     
-    // Prepare Tweats Display
+// Prepare Tweats Display
       tweat_list = "";
-    //console.log("chat?:"+ chat);
       if (chat == "true") {
-    console.log("chat mode.");
-    // Display Tweats as Chat in iframe
+// Display Tweats as Chat in iframe
         name = name.replace(" ", "+");
         tweat_list += "<iframe id='tweats_iframe' src='/get_tweats/" + name + 
     "' style='width:1250px;height:590px;position:absolute;" + 
@@ -2745,15 +2303,13 @@ function get_home_page(req, res) {
     "<p style='position:relative;top:590px'>&nbsp;</p>";
         display_tweats(req, res);
       } else {
-    console.log("non-chat");
     
-    // Display Tweats as non-Chat without iframe
+// Display Tweats as non-Chat without iframe
         tweat_list += "<div id='pic_top' style='position:relative;left:7px;top:-12px'><img id='top' " + 
     "src='/users/transparent.gif' onload='startPic();' /><img id='picture' src='/users/" + picture_url + "\' />" + 
     "</div></div></div>";
     
-    // Get Tweats from followed users and signed-in user for non-Chat Mode
-    //console.log("lim:" + shown_limit);
+// Get Tweats from followed users and signed-in user for non-Chat Mode
         var client = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
         client.query("USE " + DATABASE_NAME);
         client.query("SET NAMES 'utf8'");
@@ -2761,10 +2317,8 @@ function get_home_page(req, res) {
           "users AS u ON t.user_name = u.user_name WHERE t.user_name IN " + 
           "(SELECT followed_one FROM followed_ones AS f WHERE f.user_name = ?) ORDER BY t.id DESC LIMIT ?", [user_name, parseInt(shown_limit)], function (err, results, fields) {
           if (err) {
-            //client.end();
             throw err;
           }
-    //console.log("results:"+ JSON.stringify(results));
           if (results.length) {
             for (myrow in results) {
               if (results[myrow]['name']) {
@@ -2777,10 +2331,9 @@ function get_home_page(req, res) {
                 myrow_tweat = "";
                 myrow_hashtag = "";
               }
-    //console.log("hashtag:" + myrow_hashtag);
               if (myrow_hashtag.substr(0, 3) == "DEL") {
         
-      // Delete old chat tweat
+// Delete old chat tweat
                 var date = new Date();
                 if (date.getTime() > myrow_hashtag.substr(3)) {
                   var client2 = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
@@ -2793,15 +2346,13 @@ function get_home_page(req, res) {
                   client2.end();
                   continue;
                 }
-              }
-//console.log(myrow_name + ": " + myrow_tweat);
-    
+              }    
               tweat_list += "<div class='row' style='color:black'><div class='col-md-3 text-right' " + 
                 "style='word-wrap: break-word; margin-right: 1em; position:relative; left:46px'><b>" + 
                 wordwrap(myrow_name.replace(/%20/g, " "), 40, '<br />', true) + 
                 "</b>:</div><div class='col-md-9' style='margin-left: -2em; position:relative; left:46px'><p>" + 
                 wordwrap(myrow_tweat.replace(/%20/g, " "), tweat_width, '<br />', true);
-              if ((myrow_name == name) || (user.admin_status == 1)) { // 892
+              if ((myrow_name == name) || (user.admin_status == 1)) {
                 no_quote_tweat = myrow_tweat.substr(0,80).replace('"', ' ');
                 no_quote_tweat = no_quote_tweat.replace(/'/g, "&apos;");
                 no_quote_tweat = no_quote_tweat.replace(/"/g, "&apos;&apos;");
@@ -2812,31 +2363,27 @@ function get_home_page(req, res) {
                 no_quote_tweat = no_quote_tweat.replace(/</g, "&lt;");
                 no_quote_tweat = no_quote_tweat.replace(/>/g, "&gt;");
     
-      // X button to delete Tweat
+// X button to delete Tweat
                 tweat_list += "&nbsp;&nbsp;<img src='/users/xdel.png' style='position:relative;top:-1px' onclick='" + 
       "if (confirm(\"Are you sure you want to delete this Tweat?:\\n  " + no_quote_tweat + 
     "...\")) {window.open(\"/delete_tweat/" + tid + "\");}' />";
               }
               tweat_list += "</p></div></div>";
             }
-          } else {
-    console.log("zilch");
           }
-          //client.end();
           tweat_list += "</div>";
           if (message != "") {
               message = '<div class="row" style="height:30px;position:relative;top:-22px;left:-40px;' + 
                 'padding:0px;margin:0px;font-size:' + bigfont + 'px;color:red">' + message.trim() + '</div>';
           }
     
-      // Disclaimer    
+// Disclaimer    
           tweat_list += "<div style='text-align:center'><br /><i>Note:&nbsp;&nbsp;The creator of this website " + 
             "doesn't assume responsibility for its usage by others.</i><br /><br />" + 
             "<div class='row' style='color:black'><div class='col-md-3 text-right'>" + 
             "<div id='pic_bottom' style='position:absolute;left:7px'>" + 
             "<img id='bottom' src='/users/transparent.gif' />" + 
             "</div></div><div class='col-md-9'></div></div>";
-    //console.log("tl:"+ tweat_list);
           display_tweats(req, res);
         });
       }
@@ -2858,12 +2405,9 @@ function display_tweats(req, res) {
   } else {
     var notify = "unchecked";
   }
-console.log("notify:"+notify);
-//var decoded_tweat_list = new Buffer(JSON.stringify(tweat_list), 'ascii').toString('utf8');
   var decoded_tweat_list = tweat_list.replace(/\\"/g, '"').replace(/\\'/g, "'");
-//res.write("<!DOCTYPE html><html><head>zip</head><body>" + tweat_list + "hr</body></html>");
+
 // Get icon, Bootstrap, Angular and jQuery
-//res.cookie('chat', "false");
   res.write('<!DOCTYPE html><html><head><meta charset="utf-8" />' + 
 '  <title>' + name + '&apos;s Tweater Page (Username: ' + user_name + ')</title>' + 
 '    <link rel="shortcut icon" href="/users/favicon.png" type="image/png">' + 
@@ -3334,13 +2878,11 @@ function main_init(req, res) {
     pic_scale = 1; // Default scale is full-size
   }
 
-//console.log("pic_position to be read");
   if (cookies.get('pic_position')) { // Uploaded image position
     pic_position = cookies.get('pic_position');
   } else {
     pic_position = "Top"; // Default is above Tweats
   }
-//console.log("pic_position read:" + pic_position);
   if (cookies.get('pic_visible')) { // Uploaded image visibility
     pic_visible = cookies.get('pic_visible');
   } else {
@@ -3385,9 +2927,9 @@ function main_init(req, res) {
   if (cookies.get('chat')) { // Chat mode refreshes Tweat display every 10 seconds for real-time conversation
     chat = cookies.get('chat');
   }
-//console.log("chat:" + chat);
 
 // header is menu bar buttons at top of page
+  var ret = "_chrome";
   if (ret == "_chrome") {
     header = '<nav class="navbar navbar-default" style="width:1207px">' + 
 '    <ul class="nav nav-pills" style="background-color:#C0C0F0">' + 
@@ -3440,7 +2982,7 @@ function main_init(req, res) {
 '      </li>' + 
 '    </ul>' + 
 '</nav>';
-  } else if (ret == "_firefox") { // to be edited:
+  } else if (ret == "_firefox") {
     header = '<nav class="navbar navbar-default" style="width:1215px">' + 
 '    <ul class="nav nav-pills" style="background-color:#C0C0F0">' + 
 '      <li role="presentation" class="btn btn-success"><a href="' + SELF_NAME + '" style="color:lightgray">' + 
@@ -3469,128 +3011,6 @@ function main_init(req, res) {
   }
 }
 
-function unsubscribe_processing () {
-/**
- * Process unsubscribe request.
- */
-  user_name = cookies.get('user_name').trim().replace("%40","@");
-  password = cookies.get('password').trim().replace("%40","@");
-  password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
-
-  var client = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
-  client.query("USE " + DATABASE_NAME);
-  client.query("DELETE FROM " + DATABASE_TABLE + " WHERE ((user_name = ?) OR (email = ?)) AND (BINARY password_hash = ?)", [user_name, user_name, password_hash], function (err, results, fields) {
-    client.end();
-    if (err) {
-      throw err;
-    } else {
-      var date = new Date();
-      date.setTime(date.getTime() -  7200000);
-      cookies.set('user_name', '', date); // Set cookies to be deleted
-      cookies.set('password', '', date);
-      cookies.set('unsub', '', date);
-
-// Display good-bye page
-      res.end('<!DOCTYPE html><HTML><HEAD><TITLE>TWEATER UNSUBSCRIBE</TITLE>' + 
-'<LINK rel="shortcut icon" href="/users/favicon.png" type="image/png"></HEAD>' + 
-'<BODY style="background-color:#99D9EA;font-family:' + font + ';font-size:' + font_size + 'px">' + 
-'<h1 style="text-align:center">Tweater: You are now unsubscribed to Tweater. Sorry to see you go!<br />' + 
-'(Actually I\'m a computer and have no human feelings!)</h1><h2 style="text-align:center"><a href="' + SELF_NAME + 
-'">Click here to sign in another user or register a new user.</a></h2><img src="/users/tweatysad.png" /></BODY></HTML>');
-    }
-  }); //
-}
-
-function sign_in_auto_get_credentials() {
-/**
- * Sign in automatically with credentials from cookies.
- */
-  /*cookies.get('password').trim(); // most pw's:peter ***
-  user_name = cookies.get('user_name').trim().replace("%40","@");
-  password = cookies.get('password').trim().replace("%40","@");
-console.log("user_name cookie:" + cookies.get('user_name'));*/
-name = 'Peter Griffin'; // Testing creds ***
-user_name = 'petergriffin'; //cookies.get('user_name').trim();
-password = 'peter';
-
-  password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
-console.log("user_name:" + user_name);
-  if (cookies.get('stay_logged_in')) {
-    stay_logged_in = cookies.get('stay_logged_in').trim();
-  }
-}
-
-function change_email_notify() {
-/**
- * Change Tweat Email Notifications preference.
- */
-  if (query['notify'] == '0') {
-    tweat_notify = 0;
-    message = "Tweat Notifications are now DISABLED.";
-  } else {
-    tweat_notify = 1;
-    message = "Tweat Notifications are now enabled.";
-  }
-  var client4 = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
-  client4.query("USE " + DATABASE_NAME);
-  client4.query("SET NAMES 'utf8'");
-  client4.query("UPDATE users SET tweat_notify = ? WHERE user_name = ? AND binary password_hash = ?" + 
-    " LIMIT 1", [tweat_notify, user_name, password_hash], function (err4, results4, fields4) {
-    if (err4) {
-      message = "ERROR: Tweat Notification was not updated! Sorry, but something went wrong.<br />" + 
-        "You may try again. ";
-      //throw err4;
-    }
-  }); //
-  client4.end();
-}
-
-function change_email_address() {
-/**
- * Change email address.
- */
-  var new_email_address = query['new_email_address'];
-  console.log("new_email_address given:" + new_email_address.length);
-  if (!new_email_address) {
-    new_email_address = "";
-    null_word = "None";
-  } else {
-    null_word = "";
-  }
-  try {
-    var result = utf8.decode(new_email_address);
-  console.log('a valid utf8 (from ', new_email_address, '): ', result);
-  } catch (e) {
-    if (new_email_address) {
-  console.log('Invalid UTF-8 (', new_email_address, '): ', e);
-  	 message = "ERROR: Email address not updated! " + new_email_address + " is invalid. ";
-  	       //res.statusCode = 412;
-    }
-  }
-  if (new_email_address.length > 2) {
-    tweat_notify = 1;
-    message = "Tweat Notifications are now enabled, and your email address has been changed to: " +	        new_email_address + null_word;
-  } else {
-    tweat_notify = 0;
-    message = "Tweat Notifications are now DISABLED, and your email address has been changed to: " +	       new_email_address + null_word;
-  }
-  if (!new_email_address) {
-    new_email_address = null;
-  }
-  var client4 = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
-  client4.query("USE " + DATABASE_NAME);
-  client4.query("SET NAMES 'utf8'");
-  client4.query("UPDATE users SET email = ?, tweat_notify = ? WHERE user_name = ? AND " + 
-    "binary password_hash = ? LIMIT 1", [new_email_address, tweat_notify, user_name, password_hash], function (err4, results4, fields4) {
-    if (err4) {
-  	 message = "ERROR: Email address not updated! Sorry, but something went wrong.<br />" +  
-  	   "You may try again. ";
-  	 //throw err4;
-    }
-  }); //
-  client4.end();
-}
-
 function delete_tweat(req, res) {
 /**
  * Process the requested deletion of a Tweat.
@@ -3598,7 +3018,6 @@ function delete_tweat(req, res) {
   cookies = new Cookies(req, res);
   user_name = cookies.get('user_name').replace("%40","@");
   password = cookies.get('password').replace("%40","@");
-console.log("un:"+ user_name);
   password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
 
   var client2 = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
@@ -3638,7 +3057,6 @@ console.log("un:"+ user_name);
           message = "";
         });
       } else {
-
 // Non-administrator deletes his own Tweat
         client3.query("DELETE FROM tweats WHERE user_name = ? AND id = ? LIMIT 1", [user_name, tid], function (err3, results3, fields3) {
           if (err3) {
@@ -3673,12 +3091,10 @@ function password_forgotten(req, res) {
   client.query("SET NAMES 'utf8'");
   client.query("SELECT * FROM " + DATABASE_TABLE + " WHERE (user_name = ?) OR (email = ?) LIMIT 1", [user_name, user_name], function (err, results, fields) {
     if (err) {
-      //client.end();
       throw err;
     }
     var rows = results;
     email = rows[0]['email'];
-console.log("e:" + email);
     if ((!email) && (rows[0]['user_name'].indexOf("@") > 0) && (rows[0]['user_name'].indexOf(".") > rows[0]['user_name'].indexOf("@") + 1)) {
       email = rows[0]['user_name'];
     }
@@ -3687,12 +3103,11 @@ console.log("e:" + email);
         "to send the password reset code to.<br />Suggestion: Register as a new user and enter an " + 
         "email address at the bottom of the home page,<br />in case you forget your password again.</p>");
     } else {
-  // Generate pseudo-random 12-character password reset code and store it in database and email it to user
+// Generate pseudo-random 12-character password reset code and store it in database and email it to user
       var password_reset_code = "";
       for (ii = 1; ii <= 12; ii++) {
         password_reset_code += String.fromCharCode(Math.floor((Math.random() * 26) + 97));
       }
-  console.log("code:" + password_reset_code);
       transporter.sendMail({from: 'Tweater <davareno58@gmail.com>', to: email, subject: 
         'Password reset code for ' + rows[0]['name'] + '\'s Tweater account',
         html: '<html><body style="background-color:#99D9EA;padding:8px;font-family:' + font + 
@@ -3705,7 +3120,6 @@ console.log("e:" + email);
         '<br /><br /><br /><br /><br /><br /><br /><br /><br /><br /></body></html>'});
 
       password_reset_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password_reset_code).digest("base64");
-  console.log("reset hash:" + password_reset_hash); // line 1040
       var client2 = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
       client2.query("USE " + DATABASE_NAME);
       client2.query("SET NAMES 'utf8'");
@@ -3715,18 +3129,12 @@ console.log("e:" + email);
           throw err2;
         }
 
-  // Display password reset page with Turing test
+// Display password reset page with Turing test
         res.write('<!DOCTYPE html><html><head><title>Password Reset</title>' + SCRIPTS_EXTERNAL + turing + 
 '</head><body style="background-color:#99D9EA;padding:8px;' + 'font-family:' + font + ';font-size:' + 
 font_size + 'px" onload="turingsetup();">' + header);
 
-  /* // Display message if any
-      if (message.length > 0) { 
-        res.write('<div class="container"><p style="font-size:' + bigfont + 'px;color:red">' + 
-          message + '</p></div>');
-        message = "";
-      } */
-  // Enter password reset code and choose new password
+// Enter password reset code and choose new password
         res.end('<img src="/users/tweatyquestion.png" style="float:right" />' + 
   '        A password reset code has been sent by the Apache server to your email address<br />' + 
   '        (or to the email address in your username). If you don\'t see it there, be sure to<br />' + 
@@ -3760,46 +3168,17 @@ font_size + 'px" onload="turingsetup();">' + header);
   '        </form>' + 
   '        </body>' + 
   '        </html>');
-      }); //
+      });
       client2.end();
     }
-  }); //
+  });
   client.end();
-  //res.end();
-}
-
-function sign_in_manual_get_credentials() {
-/**
- * Sign in manually from POST data from Signin/Registration forms page.
- */
-  user_name = get_post("user_name").replace("%40","@");
-  password = get_post("password").replace("%40","@");
-  stay_logged_in = get_post("stay_logged_in");
-// testing uname/pw **:
-//user_name = 'crandadk@aol.com'; //cookies.get('user_name').trim(); // Testing creds **
-//password = 'oner58'; //cookies.get('password').trim(); // most pw's:peter **
-//name = 'David Crandall';
-  password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
-  console.log("Sign in username given:" + user_name);
-  console.log("pw hash:" + password_hash);
 }
 
 function post_tweat(req, res) {
 /**
  * Post the new Tweat to the database.
  */
-
-  /*try {
-    var result = utf8.decode(tweat);
-console.log('a valid utf8 Tweat: ', result);
-  } catch (e) {
-console.log('Invalid UTF-8 Tweat: ', tweat + " ", e, result);
-    message = "ERROR: Tweat not posted! Invalid encoding! Must be UTF-8 text. ";
-    res.statusCode = 412;
-    res.end(message);
-    return;
-  }*/
-
   var client = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
   client.query("USE " + DATABASE_NAME);
   client.query("SET NAMES 'utf8'");
@@ -3830,12 +3209,10 @@ console.log('Invalid UTF-8 Tweat: ', tweat + " ", e, result);
     return String.fromCharCode(parseInt("0x" + b));
   });
 
-console.log("tw:" + tweat);
   client.query("INSERT INTO tweats (id, user_name, tweat, hashtag) values(NULL,?,?,?)", [user_name, tweat, hashtag], function (err, results, fields) {
     if (err) {
       message = "ERROR: Tweat not posted! Sorry, but something went wrong.<br />" + 
         "You may try to post the Tweat again. ";
-      //throw err;
     } else {
       var client2 = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
       client2.query("USE " + DATABASE_NAME);
@@ -3868,196 +3245,12 @@ console.log("tw:" + tweat);
         client2.end();
       });
     }
-console.log("reloading home");
     client.end();
     get_home_page(req, res);
   });
 }
 
-function sign_in_to_account(req, res) {
-/**
- * Sign in with credentials.
- * @param {string} res Response from server to client.
- */
-console.log("In sign_in_to_account");
-  var client = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
-
-  client.query("USE " + DATABASE_NAME);
-  client.query("SET NAMES 'utf8'");
-  client.query("SELECT * FROM " + DATABASE_TABLE + " WHERE ((user_name = ?) OR (email = ?)) AND " + 
-    "(binary password_hash = ?) LIMIT 1", [user_name, user_name, password_hash], function (err, results, fields) {
-    if (err) {
-      message += "ERROR: Sorry, but something went wrong. You may try again later. ";
-      //client.end();
-      throw err;
-    } else {
-      user_rows = results;
-      var num_rows = results.length;
-      client.end();
-
-// Sign In failure, so display Sign In/Registration with error message
-      if (num_rows == 0) {
-        if (user_name != "") {
-          message = '"' + user_name + '" was not found in ' + DATABASE_TABLE + ' with the password given. ';
-console.log("pwhash:"+password_hash);
-        } else {
-          message = 'A username and a password are required. ';
-        }
-        if (password.toLowerCase() != password) {
-          message += '<br />Note: Make sure your caps lock isn\'t on by accident, since passwords are ' + 
-            'case sensitive. ';
-        }
-        sign_in_or_register(req, res, message);
-      } else {
-// Successful sign-in
-// Get picture filename or default
-        id = user_rows[0]['id'];
-        name = user_rows[0]['name'];
-
-        picture_ext = user_rows[0]['picture_ext'];
-        if (picture_ext.length < 1) {
-          picture_url = "nophoto.jpg";
-        } else {
-          picture_url = id + "." + picture_ext;
-        }
-console.log("In! pic:" + id + picture_ext);
-console.log("pic url:" + picture_url);
-
-/*// Set signed-in cookie if not yet set
-        if (!isset($_COOKIE['user_name']) || !isset($_COOKIE['password'])) {
-          setcookie('user_name', user_name, 0, "/");
-          setcookie('password', password, 0, "/");
-        }*/
-        client.end();
-        get_home_page(req, res);
-        //res.end(); // Not needed?
-      }
-    }
-  });
-}
-
-function password_reset(req, res) {
-/**
- * Process password reset.
- * @param {string} req Request from client to server.
- * @param {string} res Response from server to client.
- */
-  message = query['message'] || "";
-  post_body = "";
-  req.on('data', function handlePost(postchunk) {
-    post_body += postchunk;
-  }); //
-
-  req.on("end", function() {
-  //console.log("post_body:", post_body);
-
-  console.log("processing forgotten pw");
-    ret = query['return'];
-    user_name = get_post('given_user_name').trim().replace("%40","@");
-    given_password_reset_code = crypto.createHmac("MD5", CRYPT_SALT).update(get_post('given_password_reset_code').trim()).digest("base64");
-    password = get_post('password').trim().replace("%40","@");
-    console.log("reset:" + given_password_reset_code);
-    password_confirm = get_post('password_confirm').trim();
-    password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
-
-    var client = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
-
-    client.query("USE " + DATABASE_NAME);
-    client.query("SET NAMES 'utf8'");
-    client.query("SELECT password_reset_hash FROM " + DATABASE_TABLE + " WHERE (user_name = ?) OR (email = ?)" + 
-      " LIMIT 1", [user_name, user_name], function (err, results, fields) {
-      if (err) {
-        message += "ERROR: Sorry, but something went wrong. You may try again. ";
-        //client.end();
-        throw err;
-      } else {
-        var rows = results;
-        password_reset_code = rows[0]['password_reset_hash'];
-        client.end();
-        cookies.set('user_name', user_name, 0);
-        cookies.set('password', password, 0);
-
-        res.writeHead(200, {'Content-Type': 'text/html' });
-        res.write('<!DOCTYPE html><html>' + 
-    '             <head><title>Password Reset Result</title>' + 
-    '               <link rel="stylesheet" ' + 
-    '                 href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">' + 
-    '               <link rel="stylesheet" ' + 
-    '                 href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">' + 
-    '               <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>' + 
-    '               <!--[if lt IE 9]><script src="http://html5shim.googlecode.com/svn/trunk/html5.js">' + 
-    '                 </script><![endif]-->' + 
-    '             </head>' + 
-    '             <body style="background-color:#c0c0f0;padding:8px;font-family:' + font + 
-    ';font-size:' + font_size + '">' + header + '<div class="container">' + message + '</div>');
-    console.log("gvn ad:" + get_post("given_added"));
-    console.log("ad:" + get_post("answer_added"));
-        if (get_post("answer_added") != get_post("given_added")) {
-          res.end('<br /><br /><br /><blockquote><p style="color:red">The answer to the math question ' + 
-    'was incorrect. To try again,<br />click the browser\'s Back button, or return to the ' + 
-    '<span style="color:black"><a href="index.html">Sign In</a>' + 
-    '             <span style="color:red"> page,<br />enter your username and then ' + 
-    '             click on \'I forgot my password\'<br />and click the Sign In button to get ' + 
-    '             another password reset code<br />sent to your email address.</p></blockquote></body></html>');
-        } else if (given_password_reset_code != password_reset_code) {
-          res.end('<br /><br /><br /><blockquote><p style="color:red">The password reset code given is not ' + 
-    'correct. To try again,<br />click the browser\'s Back button, or return to the ' + 
-    '<span style="color:black"><a href="' + SELF_NAME + '">Sign In</a>' + 
-    '             <span style="color:red"> page,<br />enter your username and then ' + 
-    '             click on \'I forgot my password\'<br />and click the Sign In button to get ' + 
-    '             another password reset code<br />sent to your email address.</p></blockquote></body></html>');
-        } else if (password != password_confirm) {
-          res.end('<br /><br /><br /><blockquote><p style="color:red">The new password confirmation ' + 
-    'does not match the new password.<br />To try again, click the browser\'s Back button, or return to the ' + 
-    '             <br /><span style="color:black"><a href="index.html">Sign In</a>' + 
-    '             <span style="color:red"> page, enter your username and then click on ' + 
-    '             <br />\'I forgot my password\' and click the Sign In button to get another ' + 
-    '             <br />password reset code sent to your email address.</p></blockquote></body></html>');
-        } else {
-          var client2 = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
-
-          client2.query("USE " + DATABASE_NAME);
-          client2.query("SET NAMES 'utf8'");
-          client2.query("UPDATE " + DATABASE_TABLE + " SET password_hash = ? WHERE user_name = ? LIMIT 1", [password_hash, user_name], function (err2, results2, fields2) {
-            if (err2) {
-              message = "ERROR: Sorry, but something went wrong. You may try again. ";
-              //throw err2;
-              //client2.end();
-            } else {
-              client2.end();
-            }
-            get_home_page(req, res);
-            //res.end();
-            //res.location('http://localhost:8888/' + SELF_NAME);
-
-            //http.post({ host: req.headers.host, path: '/' + SELF_NAME });
-          }); //
-        }
-      }
-    }); //
-  //res.redirect("http://" + req.headers.host + "index.js"); 
-  });
-  //console.log("Request for " + action + " received.");
-}
-
-function help_html_setup() {
-/**
- * Help page HTML.
- * @returns {string} Help page HTML.
- */
-  try {
-    font_size = (font_size ? font_size : "18");
-    bigfont = (bigfont ? bigfont : "27");
-  } catch(e) {
-    font_size = "18";
-    bigfont = "27";
-  } finally {
-    return '<!DOCTYPE html><html><head><title>Tweater Help</title><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css"><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css"><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script><body style="background-color:#99D9EA;font-size:' + font_size + 'px"><div><a href="' + SELF_NAME + '" style="font-size:' + 
-bigfont + 'px;color:red;background-color:#990099"><b>&nbsp;Tweater Help&nbsp;</b></a></div><img src="/users/tweatyquestion.png" style="float:right" />' + help_html;
-  }
-}
-
-function page_not_found_404(res) {
+function page_not_found_404(req, res) {
 /**
  * Display 404 Error page: Page not found and Help page.
  * @param {string} res Response from server to client.
@@ -4081,7 +3274,6 @@ function page_not_found_404(res) {
 }
 
 function show_home_page(req, res) { // Display signed-in user's Home page
-  ret = '_chrome'; // Chrome browser version of Home page
   title_position = "right: -77px;";
   sign_in_width = "width:506px;";
   margin_left = "margin-left: -43px;";
@@ -4091,7 +3283,6 @@ function show_home_page(req, res) { // Display signed-in user's Home page
 }
 
 function sign_in_or_register(req, res, message) {
-  ret = '_chrome'; // Chrome browser version
   title_position = "right: -77px;";
   sign_in_width = "width:506px;";
   margin_left = "margin-left: -43px;";
@@ -4100,7 +3291,6 @@ function sign_in_or_register(req, res, message) {
 
   cookies = new Cookies(req, res);
   main_init(req, res); // Initialize main variables and also data from cookies
-console.log("msg:" + message);
   if (message) {
     message = '<div class="container"><p style="font-size:' + bigfont + 'px;color:red">' + message + '</p></div>';
   } else {
@@ -4218,7 +3408,6 @@ function upload_picture_uploading(req, res) {
       var fstream;
       req.pipe(req.busboy);
       req.busboy.on('file', function (fieldname, file, filename, encoding, mimetype) {
-        console.log("Uploading: " + encoding + mimetype);
         fstream = fs.createWriteStream(__dirname + '/pictures/tmp/' + filename);
         file.pipe(fstream);
         fstream.on('close', function () {
@@ -4227,17 +3416,11 @@ function upload_picture_uploading(req, res) {
             picture_ext = "jpg";
           }
           var uploadOk = 0;
-console.log("picext" + picture_ext);
-  // Allow only certain file types
+// Allow only certain file types
           if ((mimetype != 'image/jpg') && (mimetype != 'image/jpeg') && (mimetype != 'image/png') && (mimetype != 'image/gif')) {
             message = message + "Sorry, only .jpg, .jpeg, .png and .gif files are allowed. ";
             uploadOk = 0;
           }
-  /* // Check filesize
-        if (req.files.displayImage.size > 1048576) {
-            message = message + "Sorry, your picture file is too large. The limit is one megabyte (1048576 bytes). ";
-          uploadOk = 0;
-        } */
           if ((!cookies.get('user_name')) || (!cookies.get('password'))) {
             message = message + error_sorry;
             uploadOk = 0;
@@ -4247,28 +3430,22 @@ console.log("picext" + picture_ext);
             password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
             uploadOk = 1;
           }
-console.log("upldok" + uploadOk);
 
-  // Check whether uploadOk has been set to 0 by any error
+// Check whether uploadOk has been set to 0 by any error
           if (uploadOk == 0) {
             message = message + "Your picture file was not uploaded. ";
-    // If everything is ok, try to upload
+// If everything is ok, try to upload
           } else {
             var client = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
-console.log("pwh: " + password_hash + user_name);
-
             client.query("USE " + DATABASE_NAME);
             client.query("SELECT * FROM " + DATABASE_TABLE + " WHERE (user_name = ?) and (binary " + 
               "password_hash = ?)", [user_name, password_hash], function (err, results, fields) {
               if (err) {
                 message = "ERROR: Picture file not uploaded! Sorry, but something went wrong.<br />" +  
                   "You may try again. ";
-                    //throw err;
               } else {
                 if (results.length) {
-console.log("fd results.");
                   if (results[0]['picture_ext']) {
-console.log("deleting " + results.toString());
                     var old_filename = __dirname + "/pictures/" + results[0]['id'] + "." + results[0]['picture_ext'];
                     fs.unlink(old_filename, function (err, results, fields) {
                     });
@@ -4281,16 +3458,13 @@ console.log("deleting " + results.toString());
                     if (err2) {
                       message = "ERROR: Picture not uploaded! Sorry, but something went wrong.<br />" +  
                         "You may try again. ";
-                        //throw err2;
                     } else {
-console.log("new picext: " + picture_ext);
                       client2.end();
                       user.picture_ext = picture_ext;
                       fs.rename(__dirname + "/pictures/tmp/" + filename, __dirname + "/pictures/" + id + "." + picture_ext, function(err3) {
                         if (err3) {
                           message = message + error_sorry;
                         } else {
-console.log("renaming/moving: " + filename + " to " + id + "." + picture_ext);
                           message = "Picture uploaded! To see the new picture, go back to your home page an" + 
                             "d click on your browser's Refresh button or click on Home at the top left. Not" + 
                             "e: You can also post URLs of pictures that start with \\\"http\\\". After typing o" + 
@@ -4298,7 +3472,6 @@ console.log("renaming/moving: " + filename + " to " + id + "." + picture_ext);
                           res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
                           res.end("<!DOCTYPE HTML><HTML><head><script>" + 
                             "alert(\"" + message + "\"); window.close();</script></head><body></body></html>");
-                          //client.end();
                           message = "";
                           return;
                         }
@@ -4307,14 +3480,12 @@ console.log("renaming/moving: " + filename + " to " + id + "." + picture_ext);
                           res.end("<!DOCTYPE HTML><HTML><head><script>" + 
                             "alert(\"" + message + "\"); window.close();</script></head><body></body></html>");
                           message = "";
-console.log("client2 ended. msg:" + message);
                         }
                       });
                     }
                   });
                 }
               }
-console.log("client end.");
               client.end();
               if (message) {
                 res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
@@ -4327,14 +3498,8 @@ console.log("client end.");
         });
       }); 
     }
-      /*res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
-      show_home_page(req, res);*/
   } else {
     message += "Sorry, there was an error uploading your picture file. ";
-    //res.redirect('back');
-  /*res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
-    res.end("<!DOCTYPE HTML><HTML><head><script>alert(\"" + message + "\"); window.close();</script></head>" + 
-      "<body></body></html>");*/
   }
   return;
 }
@@ -4386,4 +3551,5 @@ function all_users_display(req, res) {
   });
 }
 
-exports.start = start;
+app.listen(port);
+console.log("Tweater Node.js version 1.0 started.");
