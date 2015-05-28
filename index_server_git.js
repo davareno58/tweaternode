@@ -1,3 +1,5 @@
+// Move js msgs from a new page to same page & put resulting msg in red on reloaded home page like Tweat deleted.
+
 /**
  * @fileOverview Tweater Twitter-like social media application.
  * @version 2.0
@@ -57,7 +59,11 @@ transporter = nodemailer.createTransport({ service: 'Gmail', auth: { user: 'dava
 /**
  * Create globals:
  *
+ * @private {string} [browser_name="Chrome"] Browser name.
  * @private {string} [chat="false"] Chat Mode status.
+ * @private {string} [chat_button="success"] Chat Mode button color type.
+ * @private {string} [chat_button_action="Start"] Chat Mode button action.
+ * @private {string} [chat_toggle="true"] Chat Mode status chosen by clicking button.
  * @private {string} email User email address.
  * @private {string} esc_name Version of user's name with space(s) changed to "+" for GET querystring.
  * @private {string} followed_ones_list List of user's followed users.
@@ -99,6 +105,7 @@ transporter = nodemailer.createTransport({ service: 'Gmail', auth: { user: 'dava
  * @private {string} timeout_message Chat Mode timeout message.
  * @private {string} title_position Position of title on page.
  * @private {string} tweat Public message posted by user.
+ * @private {string} tweat_form_html HTML for Tweat form and search fields & nearby buttons, tailored for browser.
  * @private {string} tweat_list List of formatted Tweats posted by user and user's followed users, if any.
  * @private {number} [tweat_notify=0] Preference for receiving emails of Tweats posted by followed users, if any.
  * @private {number} [tweat_width=80] Maximum width in characters of Tweats on user's page.
@@ -109,7 +116,11 @@ transporter = nodemailer.createTransport({ service: 'Gmail', auth: { user: 'dava
  * @private {string} user_rows Results from users database from sign-in.
  */
 
+browser_name = "Chrome";
 chat = 'false';
+chat_button = 'success';
+chat_button_action = 'Start';
+chat_toggle = 'true';
 cookies = null;
 email = "";
 esc_name = "";
@@ -151,6 +162,7 @@ tid = "";
 timeout_message = "";
 title_position = "";
 tweat = "";
+tweat_form_html = "";
 tweat_list = "";
 tweat_notify = 0;
 tweat_width = 80;
@@ -380,11 +392,20 @@ app.get('/', function(req, res) {
   if (cookies.get('user_name') && cookies.get('password')) {
     var given_user_name = cookies.get('user_name').replace("%40","@");
     password = cookies.get('password').replace("%40","@");
-    title_position = "right: -77px;";
-    sign_in_width = "width:506px;";
-    margin_left = "margin-left: -43px;";
-    interests_position = "left:3px;";
-    interests_width = "width:310px;position:relative;top:2px";
+// Adjust Chat Mode start/stop button and its action
+  chat = 'false';
+  if (cookies.get('chat')) { // Chat mode refreshes Tweat display every 10 seconds for real-time conversation
+    chat = cookies.get('chat');
+  }
+  if (chat == "true") {
+    chat_button = 'danger';
+    chat_button_action = 'Stop';
+    chat_toggle = 'false';
+  } else {
+    chat_button = 'success';
+    chat_button_action = 'Start';
+    chat_toggle = 'true';
+  }
 
     main_init(req, res); // Initialize main variables and also data from cookies
     password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
@@ -2211,8 +2232,6 @@ function get_home_page(req, res) {
  * Get home page HTML.
  * @returns {string} signed-in user's home page HTML.
  */
-  main_init(req, res); // Initialize user header HTML and user variables from cookies
-
   if (font_size == FONTSIZE) { // Adjust input width by font size
     input_width = 113;
   } else {
@@ -2260,9 +2279,13 @@ function get_home_page(req, res) {
           }
         }
         client7.end();
-      }    
+      }
       esc_name = name.replace(" ", "+"); // Version of user's name with space(s) changed to + for GET querystring
 // Adjust Chat Mode start/stop button and its action
+      chat = 'false';
+      if (cookies.get('chat')) { // Chat mode refreshes Tweat display every 10 seconds for real-time conversation
+        chat = cookies.get('chat');
+      }
       if (chat == "true") {
         chat_button = 'danger';
         chat_button_action = 'Stop';
@@ -2272,7 +2295,9 @@ function get_home_page(req, res) {
         chat_button_action = 'Start';
         chat_toggle = 'true';
       }
-    
+
+      main_init(req, res); // Initialize user header HTML and user variables from cookies
+   
       status="";
       unsubscribe_password = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
       if (message) {
@@ -2429,6 +2454,17 @@ function display_tweats(req, res) {
 'var pic_scale = ' + pic_scale + ';\n' + 
 'var pic_position = "' + pic_position + '";\n' + 
 'var pic_visible = "' + pic_visible + '";\n' + staySignedIn + 
+'var datebr = new Date();\n' + 
+'datebr.setTime(datebr.getTime() + (86400000 * 365 * 67));\n' + 
+'if (navigator.appVersion.indexOf("Chrome") >= 0) {\n' +
+'  document.cookie = "browser_name=Chrome; expires=" + datebr.toGMTString() + "; path=/";\n' + 
+'} else if (navigator.appVersion.indexOf("5.0 (Windows)") >= 0) {\n' +
+'  document.cookie = "browser_name=Firefox; expires=" + datebr.toGMTString() + "; path=/";\n' + 
+'} else if (navigator.appVersion.indexOf("(Windows ") >= 0) {\n' +
+'  document.cookie = "browser_name=MSIE; expires=" + datebr.toGMTString() + "; path=/";\n' + 
+'} else {\n' +
+'  document.cookie = "browser_name=Chrome; expires=" + datebr.toGMTString() + "; path=/";\n' + 
+'  }\n' +
 'preload("/users/xdel.png","/users/backviolet.png","/users/transparent.gif","/users/' + picture_url + 
 '","/users/favicon.png");\n'+
 'function preload() {\n'+
@@ -2790,66 +2826,7 @@ TWEATMAXSIZE + ' bytes.)"></input>' +
 '        </div>' + 
 '        </span>' + 
 '        </form>' + 
-'        </div>' + 
-'        <div class="col-md-9" style="background-color:#9999FF;margin-left: 0px;margin-right: 6px;' + 
-'border: 4px outset darkblue;padding:10px;height:259px;width:869px">' + 
-'        <form action="/post_tweat" method="POST" role="form" id="tweatform">' + 
-'        <span>' + 
-'        <div ng-app="">' + 
-'        <fieldset class="fieldset-auto-width" style="float:left">' + 
-'        <div class="span9 form-group" style="height:170px">' + 
-'        <textarea class="textarea inbox" style="width:840px" rows="3" cols="103" id="tweat" ' + 
-'name="tweat" autofocus ng-model="tweat" maxlength="' + TWEATMAXSIZE + '" placeholder=' + 
-'          "Type your Tweat here (limit: ' + TWEATMAXSIZE + ' characters) and then click the Post Tweat ' + 
-'button or press Enter">' + 
-'          </textarea><br />' + 
-'        <button type="submit" class="btn btn-success" style="position:relative;top:-8px">Post Tweat</button>' + 
-'        <span style="font-family:Courier New, monospace;position:relative;top:-8px">' + 
-'        <span ng-bind="(\'0000\' + (' + TWEATMAXSIZE + ' - tweat.length)).slice(-3)"></span> chars left' + 
-'        </span>' + 
-'        <span><button type="button" class="btn btn-warning" onclick="textErase();" style="position:relative;' + 
-'top:-8px">Erase</button>' + 
-'        <button type="button" class="btn btn-success" onclick="textLarger();" style="position:relative;' + 
-'top:-8px;width:100px">Text Size+</button>' + 
-'        <button type="button" class="btn btn-primary" onclick="textSmaller();" ' + 
-'style="position:relative;top:-8px;padding-left:2px;padding-right:2px;width:80px">Text Size-</button>' + 
-'        <button type="button" class="btn btn-info" onclick="fontEntry();" style="position:relative;top:-8px">' + 
-'Font</button><button type="button" class="btn btn-warning" id="bw" onclick="toggleBW();" ' + 
-'style="position:relative;top:-8px;margin-left:4px;width:47px;color:' + text_color + '">B</button>' + 
-'        <button type="button" class="btn btn-info" style="position:relative;top:-8px;width:49px;' + 
-'padding-left:3px;padding-right:3px" onclick="tweatWidth();">Width</button>&nbsp;' + 
-'        <button type="button" class="btn btn-warning" id="pic_url" style="position:relative;top:-8px;' + 
-'left:-6px" onclick="picUrl();">Pic</button>&nbsp;' + 
-'        <button type="submit" class="btn btn-' + chat_button + '" onclick="chatToggle(\'' + chat_toggle + 
-'\')" style="position:relative;left:3px;top:-8px">' + chat_button_action + ' Chat</button>' + 
-'        <input type="hidden" class="form-control" name="name" value=' + esc_name + '><br /></form>' + 
-'        <form><span style="position:relative;top:-4px">Hashtag Search: #</span><input type="text" ' + 
-'id="hashtag_search" style="font-size:' + font_size + ';width:450px;position:relative;top:-4px" ' + 
-'name="hashtag_search" maxlength="30" placeholder="To search Tweats, type the hashtag here and press--&gt;"' + 
-'</input><button type="button" class="btn btn-primary" onclick="hashtagSearch();" style="margin:2px;' + 
-'position:relative;top:-3px;left:2px">Hashtag Search</button>&nbsp;' + 
-'        <button type="button" class="btn btn-warning" onclick="shownLimit();" style="position:relative;' + 
-'top:-3px;padding-left:3px;padding-right:3px">Limit: ' + shown_limit + '</button>' + 
-'        </span></span><br /></div></fieldset></div></form>' + 
-'        <form action="/user_search_results" method="POST" ' + 
-'role="form" target="_blank" id="user_search_form"><br />' + 
-'        <nobr><span style="position:relative;top:-32px">User Search: </span><textarea ' + 
-'class="textarea inbox" rows="1" cols="75" id="search_any" name="search_any" maxlength="250" ' + 
-' style="font-size:' + font_size + ';position:relative;top:-22px;width:613px" ' + 
-'placeholder="To search by interests, info or names, type them here and press--&gt;"></textarea>&nbsp;' + 
-'<button type="submit" class="btn btn-info" style="position:relative;top:-33px;left:-1px;height:33px">' + 
-'User Search</button></nobr><br /></form><form action="/boolean_search_results/' + status + '" method="POST" role="form" target="_blank"><br />' + 
-'        <nobr><span style="position:relative;top:-49px;left:-40">Boolean Search: <input type="text" ' + 
-'style="position:relative;width:250px" placeholder="First Search Term" id="search_one" ' + 
-'          name="search_one" maxlength="30" size="26">' + 
-'        <select class="inbox" id="search_type" name="search_type" style="position:relative;left:-5px">' + 
-'                  <option value="AND" default>AND</option>' + 
-'                  <option value="OR">OR</option>' + 
-'                  <option value="NOT">NOT</option>' + 
-'        </select><input type="text" style="position:relative;left:-5px;width:250px" ' + 
-'placeholder="Second Search Term" id="search_two" name="search_two" value="" maxlength="30" size="26">' + 
-'        <button type="submit" class="btn btn-warning" style="position:relative;top:-2px;left:-6px">Boolean ' + 
-'Search</button></span></nobr></form>' + 
+'        </div>' + tweat_form_html + 
 '        </div></div></div><div class="row">' + decoded_tweat_list + 
 '&nbsp;<br />&nbsp;<br />&nbsp;</div>' +
 '<div id="preloaded-images"> <img src="/users/backviolet.png" width="1" height="1" /> <img src="/users/xdel.png" width="1" height="1" /> <img src="/users/favicon.png" width="1" height="1" /> <img src="/users/transparent.gif" width="1" height="1" /> <img src="/users/' + picture_url + '" width="1" height="1" /> </div>' +
@@ -2923,14 +2900,19 @@ function main_init(req, res) {
     font = "Helvetica";
   }
 
-  chat = 'false';
-  if (cookies.get('chat')) { // Chat mode refreshes Tweat display every 10 seconds for real-time conversation
-    chat = cookies.get('chat');
+  browser_name = 'Chrome';
+  if (cookies.get('browser_name')) { // Get browser name from cookie
+    browser_name = cookies.get('browser_name');
   }
+console.log("Browser:" + browser_name);
 
 // header is menu bar buttons at top of page
-  var ret = "_chrome";
-  if (ret == "_chrome") {
+  if (browser_name == "Chrome") {
+    title_position = "right: -77px;";
+    sign_in_width = "width:506px;";
+    margin_left = "margin-left: -43px;";
+    interests_position = "left:3px;";
+    interests_width = "width:310px;position:relative;top:2px";
     header = '<nav class="navbar navbar-default" style="width:1207px">' + 
 '    <ul class="nav nav-pills" style="background-color:#C0C0F0">' + 
 '      <li role="presentation" class="btn btn-success"><a href="' + SELF_NAME + '" style="color:lightgray">' + 
@@ -2956,7 +2938,71 @@ function main_init(req, res) {
 '      </li>' + 
 '    </ul>' + 
 '</nav>';
-  } else if (ret == "_msie") {
+    tweat_form_html = '<div class="col-md-9" style="background-color:#9999FF;margin-left:0px;margin-right:6px;' + 
+'border: 4px outset darkblue;padding:10px;height:259px;width:869px">' + 
+'        <form action="/post_tweat" method="POST" role="form" id="tweatform">' + 
+'        <span>' + 
+'        <div ng-app="">' + 
+'        <fieldset class="fieldset-auto-width" style="float:left">' + 
+'        <div class="span9 form-group" style="height:170px">' + 
+'        <textarea class="textarea inbox" style="width:840px" rows="3" cols="103" id="tweat" ' + 
+'name="tweat" autofocus ng-model="tweat" maxlength="' + TWEATMAXSIZE + '" placeholder=' + 
+'          "Type your Tweat here (limit: ' + TWEATMAXSIZE + ' characters) and then click the Post Tweat ' + 
+'button or press Enter.">' + 
+'          </textarea><br />' + 
+'        <button type="submit" class="btn btn-success" style="position:relative;top:-8px">Post Tweat</button>' + 
+'        <span style="font-family:Courier New, monospace;position:relative;top:-8px">' + 
+'        <span ng-bind="(\'0000\' + (' + TWEATMAXSIZE + ' - tweat.length)).slice(-3)"></span> chars left' + 
+'        </span>' + 
+'        <span><button type="button" class="btn btn-warning" onclick="textErase();" style="position:relative;' + 
+'top:-8px">Erase</button>' + 
+'        <button type="button" class="btn btn-success" onclick="textLarger();" style="position:relative;' + 
+'top:-8px;width:100px">Text Size+</button>' + 
+'        <button type="button" class="btn btn-primary" onclick="textSmaller();" ' + 
+'style="position:relative;top:-8px;padding-left:2px;padding-right:2px;width:80px">Text Size-</button>' + 
+'        <button type="button" class="btn btn-info" onclick="fontEntry();" style="position:relative;top:-8px">' + 
+'Font</button><button type="button" class="btn btn-warning" id="bw" onclick="toggleBW();" ' + 
+'style="position:relative;top:-8px;margin-left:4px;width:47px;color:' + text_color + '">B</button>' + 
+'        <button type="button" class="btn btn-info" style="position:relative;top:-8px;width:49px;' + 
+'padding-left:3px;padding-right:3px" onclick="tweatWidth();">Width</button>&nbsp;' + 
+'        <button type="button" class="btn btn-warning" id="pic_url" style="position:relative;top:-8px;' + 
+'left:-6px" onclick="picUrl();">Pic</button>&nbsp;' + 
+'        <button type="submit" class="btn btn-' + chat_button + '" onclick="chatToggle(\'' + chat_toggle + 
+'\')" style="position:relative;left:3px;top:-8px">' + chat_button_action + ' Chat</button>' + 
+'        <input type="hidden" class="form-control" name="name" value="' + esc_name + '"><br /></form>' + 
+'        <form><span style="position:relative;top:-4px">Hashtag Search: #</span><input type="text" ' + 
+'id="hashtag_search" style="font-size:' + font_size + ';width:450px;position:relative;top:-4px" ' + 
+'name="hashtag_search" maxlength="30" placeholder="To search Tweats, type the hashtag here and press--&gt;"' + 
+'</input><button type="button" class="btn btn-primary" onclick="hashtagSearch();" style="margin:2px;' + 
+'position:relative;top:-3px;left:2px">Hashtag Search</button>&nbsp;' + 
+'        <button type="button" class="btn btn-warning" onclick="shownLimit();" style="position:relative;' + 
+'top:-3px;padding-left:3px;padding-right:3px">Limit ' + shown_limit + '</button>' + 
+'        </span></span><br /></div></fieldset></div></form>' + 
+'        <form action="/user_search_results" method="POST" ' + 
+'role="form" target="_blank" id="user_search_form"><br />' + 
+'        <nobr><span style="position:relative;top:-32px">User Search: </span><textarea ' + 
+'class="textarea inbox" rows="1" cols="75" id="search_any" name="search_any" maxlength="250" ' + 
+' style="font-size:' + font_size + ';position:relative;top:-22px;width:613px" ' + 
+'placeholder="To search by interests, info or names, type them here and press--&gt;"></textarea>&nbsp;' + 
+'<button type="submit" class="btn btn-info" style="position:relative;top:-33px;left:-1px;height:33px">' + 
+'User Search</button></nobr><br /></form><form action="/boolean_search_results/' + status + '" method="POST" role="form" target="_blank"><br />' + 
+'        <nobr><span style="position:relative;top:-49px;left:-40">Boolean Search: <input type="text" ' + 
+'style="position:relative;width:250px" placeholder="First Search Term" id="search_one" ' + 
+'          name="search_one" maxlength="30" size="26">' + 
+'        <select class="inbox" id="search_type" name="search_type" style="position:relative;left:-5px">' + 
+'                  <option value="AND" default>AND</option>' + 
+'                  <option value="OR">OR</option>' + 
+'                  <option value="NOT">NOT</option>' + 
+'        </select><input type="text" style="position:relative;left:-5px;width:250px" ' + 
+'placeholder="Second Search Term" id="search_two" name="search_two" value="" maxlength="30" size="26">' + 
+'        <button type="submit" class="btn btn-warning" style="position:relative;top:-2px;left:-6px">Boolean ' + 
+'Search</button></span></nobr></form>';
+  } else if (browser_name == "MSIE") {
+    title_position = "right: -153px;";
+    sign_in_width = "";
+    margin_left = "margin-left: -53px;";
+    interests_position = "left:2px;";
+    interests_width = "";
     header = '<nav class="navbar navbar-default" style="width:1215px">' + 
 '    <ul class="nav nav-pills" style="background-color:#C0C0F0">' + 
 '      <li role="presentation" class="btn btn-success"><a href="' + SELF_NAME + '" style="color:lightgray">' + 
@@ -2975,14 +3021,62 @@ function main_init(req, res) {
 'Help</a></li>' + 
 '      <li role="presentation" class="btn btn-primary"><a onclick="settings();" style="color:lightgray">' + 
 'Settings</a></li>' + 
-'      <li role="presentation" class="btn btn-danger"><a href="signout.html" onclick="signOut();"' + 
+'      <li role="presentation" class="btn btn-danger"><a href="/user/signout" onclick="signOut();"' + 
 '        style="color:lightgray">Sign Out</a></li>' + 
 '     <li role="presentation" class="btn btn-info">' + 
 '        <a href="view_user_name/' + user_name + '" style="width:105px" target="_blank">Public Page</a>' + 
 '      </li>' + 
 '    </ul>' + 
 '</nav>';
-  } else if (ret == "_firefox") {
+    tweat_form_html = '<div class="col-md-9" style="background-color:#9999FF;margin-left: 0px;margin-right: 6px;border: 4px outset darkblue;padding:10px;height:259px">' +
+'<form action="/post_tweat" method="POST" role="form" id="tweatform">' +
+'<span>' +
+'<div ng-app="">' +
+'<fieldset class="fieldset-auto-width" style="float:left">' +
+'<div class="span9 form-group" style="height:170px">' +
+'<textarea class="textarea inbox" rows="4" cols="103" id="tweat" name="tweat" autofocus ng-model="tweat" ' +
+'  onkeyup="showCharsLeftAndLimit(this);" maxlength="' + TWEATMAXSIZE + '" placeholder=' +
+'  "Type your Tweat here (limit: ' + TWEATMAXSIZE + ' characters) and then click the Post Tweat button or press Enter.">' +
+'  </textarea><br />' +
+'<button type="submit" class="btn btn-success">Post Tweat</button>' +
+'<span style="font-family:Courier New, monospace">' +
+'<span ng-bind="(\'0000\' + (' + TWEATMAXSIZE + ' - tweat.length)).slice(-3)"></span> characters left' +
+'</span>' +
+'<span><button type="button" class="btn btn-warning" onclick="textErase();">Erase</button>' +
+'<button type="button" class="btn btn-success" style="width:100px" onclick="textLarger();">Text Size+</button>' +
+'<button type="button" class="btn btn-primary" style="padding-left:2px;padding-right:2px;width:80px" onclick="textSmaller();">Text Size-</button>' +
+'<button type="button" class="btn btn-info" onclick="fontEntry();">Font</button>' +
+'<button type="button" class="btn btn-primary" style="padding-left:2px;padding-right:2px;width:47px" onclick="toggleBW();">B/W</button>' +
+'<button type="button" class="btn btn-info" style="position:relative;left:-1px" onclick="tweatWidth();">Width</button>&nbsp;' +
+'<button type="submit" class="btn btn-' + chat_button + '" onclick="chatToggle(' + chat_toggle + ')" ' +
+' style="position:relative;left:-6px">' + chat_button_action + ' Chat</button>' +
+'<input type="hidden" class="form-control" name="name" value="' + esc_name + '"><br /></form>' +
+'<form><span style="position:relative;top:3px">Hashtag Search: #</span><input type="text" id="hashtag_search" style="font-size:' + font_size + ';width:450px;position:relative;top:5px"' +
+'  name="hashtag_search" maxlength="30" placeholder="To search Tweats, type the hashtag here and press--&gt;"></input>' +
+'  <button type="button" class="btn btn-primary" onclick="hashtagSearch();" style="margin:2px">Hashtag Search</button>&nbsp;' +
+'<button type="button" class="btn btn-warning" onclick="shownLimit();" style="padding-left:3px;padding-right:3px">Limit ' + shown_limit + '</button>' +
+'</span></span><br /></div></fieldset></div></form>' +
+'<form action="/user_search_results" method="POST" role="form" target="_blank" id="user_search_form"><br />' +
+'<nobr><span style="position:relative;top:-22px">User Search: </span><input type="text" id="search_any" name="search_any" size="72" maxlength="250" ' +
+'  style="position:relative;top:-19px;height:26px" placeholder="To search by interests, info or names, type them here and press--&gt;" ' +
+'  style="font-size:' + font_size + '"></input>&nbsp;<button type="submit" class="btn btn-info" style="position:relative;top:-24px">User Search</button></nobr><br />' +
+'</form>' +
+'<form action="/boolean_search_results/' + status + '" method="POST" role="form" target="_blank"><br />' +
+'<nobr><span style="position:relative;top:-46px">Boolean Search: <input type="text" ' +
+'  style="position:relative;top:3px" placeholder="First Search Term" id="search_one" ' +
+'  name="search_one" maxlength="30" size="26">' +
+'<select class="inbox" id="search_type" name="search_type" style="position:relative;left:-5px;top:1px">' +
+'          <option value="AND" default>AND</option>' +
+'          <option value="OR">OR</option>' +
+'          <option value="NOT">NOT</option>' +
+'</select><input type="text" style="position:relative;top:3px;left:-6px" placeholder="Second Search Term" id="search_two" name="search_two" value="" maxlength="30" size="26">' +
+'<button type="submit" class="btn btn-warning" style="position:relative;top:-2px;left:-6px">Boolean Search</button></span></nobr></form>';
+  } else if (browser_name == "Firefox") {
+    title_position = "right: -77px;";
+    sign_in_width = "width:506px;";
+    margin_left = "margin-left: -43px;";
+    interests_position = "left:3px;";
+    interests_width = "width:310px;position:relative;top:2px";
     header = '<nav class="navbar navbar-default" style="width:1215px">' + 
 '    <ul class="nav nav-pills" style="background-color:#C0C0F0">' + 
 '      <li role="presentation" class="btn btn-success"><a href="' + SELF_NAME + '" style="color:lightgray">' + 
@@ -3001,13 +3095,56 @@ function main_init(req, res) {
 'Help</a></li>' + 
 '      <li role="presentation" class="btn btn-primary"><a onclick="settings();" style="color:lightgray">' + 
 'Settings</a></li>' + 
-'      <li role="presentation" class="btn btn-danger"><a href="signout.html" onclick="signOut();"' + 
+'      <li role="presentation" class="btn btn-danger"><a href="/user/signout" onclick="signOut();"' + 
 '        style="color:lightgray">Sign Out</a></li>' + 
 '     <li role="presentation" class="btn btn-info">' + 
 '        <a href="view_user_name/' + user_name + '" style="width:105px" target="_blank">Public Page</a>' + 
 '      </li>' + 
 '    </ul>' + 
 '</nav>';
+    tweat_form_html = '<div class="col-md-9" style="background-color:#9999FF;margin-left:0px;margin-right: 6px;border: 4px outset darkblue;padding:10px;height:259px;width:869px">' +
+'<form action="/post_tweat" method="POST" role="form" id="tweatform">' +
+'<span>' +
+'<div ng-app="">' +
+'<fieldset class="fieldset-auto-width" style="float:left">' +
+'<div class="span9 form-group" style="height:170px">' +
+'<textarea class="textarea inbox" style="width:840px;height:89px" rows="3" cols="104" id="tweat" name="tweat" autofocus ng-model="tweat" ' +
+'  onkeyup="showCharsLeftAndLimit(this);" maxlength="' + TWEATMAXSIZE + '" placeholder=' +
+'  "Type your Tweat here (limit: ' + TWEATMAXSIZE + ' characters) and then click the Post Tweat button or press Enter.">' +
+'  </textarea><br />' +
+'<button type="submit" class="btn btn-success" style="position:relative;top:-2px">Post Tweat</button>' +
+'<span style="font-family:Courier New, monospace;position:relative;top:-3px">' +
+'<span ng-bind="(\'0000\' + (' + TWEATMAXSIZE + ' - tweat.length)).slice(-3)"></span> characters left' +
+'</span>' +
+'<span style="position:relative;top:6px"><button type="button" class="btn btn-warning" onclick="textErase();" style="position:relative;top:-8px">Erase</button>' +
+'<button type="button" class="btn btn-success" onclick="textLarger();" style="position:relative;top:-8px;width:100px">Text Size+</button>' +
+'<button type="button" class="btn btn-primary" onclick="textSmaller();" style="position:relative;top:-8px;padding-left:2px;padding-right:2px;width:80px">Text Size-</button>' +
+'<button type="button" class="btn btn-info" onclick="fontEntry();" style="position:relative;top:-8px">Font</button>' +
+'<button type="button" class="btn btn-primary" onclick="toggleBW();" style="position:relative;top:-8px;padding-left:2px;padding-right:2px;width:47px">B/W</button>' +
+'<button type="button" class="btn btn-info" style="position:relative;top:-8px;width:49px;padding-left:3px;padding-right:3px" onclick="tweatWidth();">Width</button>&nbsp;' +
+'<button type="submit" class="btn btn-' + chat_button + '" onclick="chatToggle(' + chat_toggle + ')" ' +
+' style="position:relative;left:-6px;top:-8px">' + chat_button_action + ' Chat</button>' +
+'<input type="hidden" class="form-control" name="name" value="' + esc_name + '"><br /></form>' +
+'<form><span style="position:relative;top:-1px">Hashtag Search: #</span><input type="text" id="hashtag_search" style="font-size:' + font_size + ';width:450px;height:26px"' +
+'  name="hashtag_search" maxlength="30" placeholder="To search Tweats, type the hashtag here and press--&gt;"></input>' +
+'  <button type="button" class="btn btn-primary" onclick="hashtagSearch();" style="margin:2px;position:relative;top:-4px;left:-6px">Hashtag Search</button>&nbsp;' +
+'<button type="button" class="btn btn-warning" onclick="shownLimit();" style="position:relative;top:-4px;left:-13px">Limit ' + shown_limit + '</button>' +
+'</span></span><br /></div></fieldset></div></form>' +
+'<form action="/user_search_results" method="POST" role="form" target="_blank" id="user_search_form"><br />' +
+'<nobr><span style="position:relative;top:-19px">User Search: </span><input type="text" id="search_any" name="search_any" size="72" maxlength="250" ' +
+'  style="position:relative;top:-19px;height:26px" placeholder="To search by interests, info or names, type them here and press--&gt;" ' +
+'  style="font-size:' + font_size + '"></input>&nbsp;<button type="submit" class="btn btn-info" style="position:relative;top:-21px">User Search</button></nobr><br />' +
+'</form>' +
+'<form action="/boolean_search_results/' + status + '" method="POST" role="form" target="_blank"><br />' +
+'<nobr><span style="position:relative;top:-45px;left:-33">Boolean Search: <input type="text" ' +
+'  style="position:relative;top:0px;width:250px;height:26px" placeholder="First Search Term" id="search_one" ' +
+'  name="search_one" maxlength="30" size="26">' +
+'<select class="inbox" id="search_type" name="search_type" style="position:relative;left:-5px">' +
+'          <option value="AND" default>AND</option>' +
+'          <option value="OR">OR</option>' +
+'          <option value="NOT">NOT</option>' +
+'</select><input type="text" style="position:relative;top:0px;left:-6px;width:250px;height:26px" placeholder="Second Search Term" id="search_two" name="search_two" value="" maxlength="30" size="26">' +
+'<button type="submit" class="btn btn-warning" style="position:relative;top:-1px;left:-6px">Boolean Search</button></span></nobr></form>';
   }
 }
 
@@ -3283,12 +3420,6 @@ function show_home_page(req, res) { // Display signed-in user's Home page
 }
 
 function sign_in_or_register(req, res, message) {
-  title_position = "right: -77px;";
-  sign_in_width = "width:506px;";
-  margin_left = "margin-left: -43px;";
-  interests_position = "left:3px;";
-  interests_width = "width:310px;position:relative;top:2px";
-
   cookies = new Cookies(req, res);
   main_init(req, res); // Initialize main variables and also data from cookies
   if (message) {
@@ -3300,7 +3431,7 @@ function sign_in_or_register(req, res, message) {
     email = "";
   }
   res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
-  res.end('<!DOCTYPE html><html><head><title>Tweater</title><link rel="shortcut icon" href="/users/favicon.png" ' + 'type="image/png">' + SCRIPTS_EXTERNAL + turing +
+  res.end('<!DOCTYPE html><html><head><title>Tweater</title>' + SCRIPTS_EXTERNAL + turing +
 '<SCRIPT LANGUAGE="JavaScript">' + 
 '  function URLsetup() {' + 
 '    document.getElementById("action").action = "' + SELF_NAME + '?user_name=" + ' + 
@@ -3315,6 +3446,17 @@ function sign_in_or_register(req, res, message) {
 '  function contact() {' + 
 '    alert("David Crandall\'s email is crandadk@aol.com");' + 
 '  };' + 
+'  var date = new Date();' + 
+'  date.setTime(date.getTime() + (86400000 * 365 * 67));' + 
+'  if (navigator.appVersion.indexOf("Chrome") >= 0) {' +
+'     document.cookie = "browser_name=Chrome; expires=" + date.toGMTString() + "; path=/";' + 
+'  } else if (navigator.appVersion.indexOf("5.0 (Windows)") >= 0) {' +
+'     document.cookie = "browser_name=Firefox; expires=" + date.toGMTString() + "; path=/";' + 
+'  } else if (navigator.appVersion.indexOf("(Windows ") >= 0) {' +
+'     document.cookie = "browser_name=MSIE; expires=" + date.toGMTString() + "; path=/";' + 
+'  } else {' +
+'     document.cookie = "browser_name=Chrome; expires=" + date.toGMTString() + "; path=/";' + 
+'  }' +
 '</SCRIPT>' + 
 '</head><body style="background-color:#99D9EA;padding:8px;font-family:' + font + '; font-size:' + font_size + 'px" onload="turingsetup();">' + message + 
 '<div style="margin-left: auto; margin-right: auto;"><p style="text-align:center"><img src="/users/tweaty.png" style="width:25%;height:25%" />' + 
