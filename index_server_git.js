@@ -1,4 +1,4 @@
-// Move js msgs from a new page to same page & put resulting msg in red on reloaded home page like Tweat deleted.
+// To do: More comments.
 
 /**
  * @fileOverview Tweater Twitter-like social media application.
@@ -21,7 +21,7 @@
  * @constant {string} TWEATMAXSIZE Maximum number of characters allowed in a Tweat message.
  * @constant {string} USERNAME Database username.
  */
-CRYPT_SALT = "x";
+CRYPT_SALT = 'x';
 DATABASE_HOST = '192.168.0.3';
 DATABASE_NAME = "my_crandall";
 DATABASE_TABLE = "users";
@@ -264,7 +264,7 @@ AAAAAElFTkSuQmCC" alt="Tweaty" style="float:left">';
 /**
  * Help page HTML.
  */
-help_html = '<ul><li>To show a list of all users, just click the User Search button at the right.</li><li>Click your browser\'s Back button to go back to previous page(s).</li><li>To update your page or to remove red messages, click on Home at the top left<br />(or your browser\'s Refresh button).</li><li>Cookies and JavaScript must be enabled for some functions.</li><li>The User Search searches for names, usernames, information and interests,<br />and has a limit of 10 search words per search.</li><li>In a Boolean Search, at least the first term must be filled in.</li><li>Wildcards may be used in Hashtag Searches and Boolean Searches:<br /> ? for any one character, and * for any zero or more characters.</li><li>The Limit button at the right sets the number of Tweats shown and the number<br />of Search Results.</li><li>To turn on Chat Mode, click the green Start Chat button at the right.<br /> It will turn into a red Stop Chat button. In Chat Mode, the Tweats will be<br /> redisplayed every ten seconds, so any Tweats sent by someone<br /> you\'re following will appear automatically without having to click Home<br /> to reload the page. If the person you\'re following is also following you,<br /> and he\'s in Chat Mode, your new Tweats should appear automatically<br /> every ten seconds on his page as well, so you can have a real-time<br /> text conversation in Chat Mode. Actually, several people who are all following each other<br /> and are all in Chat Mode can have a multi-person conversation! In Chat Mode, any picture<br /> will be moved to the bottom of the page, and only the ten most recent Tweats are displayed.<br /> If you don\'t send a Tweat for five minutes, Chat Mode will be turned off automatically,<br /> and you would have to click Start Chat to restart it. Tweats sent in Chat Mode will be deleted<br /> automatically after 24 hours, so they can\'t have hashtags, and no email notifications<br /> are sent with these Tweats.</li><li>To post a picture by using a URL beginning with "http", type or paste it into the Tweat textbox,<br /> and then click the Pic button before pressing Enter.</li><li>To add a hashtag to a Tweat, just include the # sign followed by the hashtag,<br /> such as #popmusic (with no spaces between multiple words). Only one hashtag<br /> can be used in each Tweat, but you could post the same Tweat twice<br />with different hashtags, theoretically...</li></ul></body></html>';
+help_html = '<ul><li>To show a list of all users, just click the User Search button at the right.</li><li>Click your browser\'s Back button to go back to previous page(s).</li><li>To update your page or to remove red messages, click on Home at the top left<br />(or your browser\'s Refresh button).</li><li>Cookies and JavaScript must be enabled for some functions.</li><li>The User Search searches for names, usernames, information and interests,<br />and has a limit of 10 search words per search.</li><li>In a Boolean Search, at least the first term must be filled in.</li><li>Wildcards may be used in Hashtag Searches and Boolean Searches:<br /> ? for any one character, and * for any zero or more characters.</li><li>The Limit button at the right sets the number of Tweats shown and the number<br />of Search Results.</li><li>To turn on Chat Mode, click the green Start Chat button at the right.<br /> It will turn into a red Stop Chat button. In Chat Mode, the Tweats will be<br /> redisplayed every ten seconds, so any Tweats sent by someone<br /> you\'re following will appear automatically without having to click Home<br /> to reload the page. If the person you\'re following is also following you,<br /> and he\'s in Chat Mode, your new Tweats should appear automatically<br /> every ten seconds on his page as well, so you can have a real-time<br /> text conversation in Chat Mode. Actually, several people who are all following each other<br />and are in Chat Mode can have a multi-person conversation! In Chat Mode, your picture<br />is moved to the bottom of the page, and only the ten most recent Tweats are displayed.<br /> If you don\'t send a Tweat for five minutes, Chat Mode will be turned off automatically,<br /> and you would have to click Start Chat to restart it. Tweats sent in Chat Mode will be deleted<br /> automatically after 24 hours, so they can\'t have hashtags, and no email notifications<br /> are sent with these Tweats.</li><li>To post a picture by using a URL beginning with "http", type or paste it into the Tweat textbox,<br /> and then click the Pic button before pressing Enter.</li><li>To add a hashtag to a Tweat, just include the # sign followed by the hashtag,<br /> such as #popmusic (with no spaces between multiple words). Only one hashtag<br /> can be used in each Tweat, but you could post the same Tweat twice<br />with different hashtags, theoretically... &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a style="background-color:red;float:right" href="" onclick="window.close();">&nbsp;CLOSE WINDOW&nbsp;</a></li></ul></body></html>';
 
 /**
  * HTML heredocs.
@@ -571,7 +571,7 @@ app.get('/get_tweats/:name', function(req, res) {
 
 // X button to delete Tweat
             res.write("&nbsp;&nbsp;&nbsp;<span style='color:black;background-color:red' onclick='if (confirm(\"Are you sure you want to delete this Tweat?:\\n  " + 
-            no_quote_tweat + "...\")) {window.open(\"/delete_tweat/\" + " + tid + ", \"_parent\");}'>&nbsp;X&nbsp;</span>");
+            no_quote_tweat + "...\")) {window.open(\"/delete_tweat/\" + " + tid + ");}'>&nbsp;X&nbsp;</span>");
           }
           res.write("</td></tr>");
         }
