@@ -1,5 +1,3 @@
-// To do: More comments.
-
 /**
  * @fileOverview Tweater Twitter-like social media application.
  * @version 2.0
@@ -12,11 +10,13 @@
  * @constant {string} DATABASE_HOST Database host.
  * @constant {string} DATABASE_NAME Database name.
  * @constant {string} DATABASE_TABLE Database user table.
+ * @constant {string} FONT_INITIAL Initial font name.
  * @constant {string} FONTSIZE Size of font in pixels.
  * @constant {string} MY_PATH Path to this file's directory.
  * @constant {string} PASSWORD Database password. ***
  * @constant {string} SCRIPTS_EXTERNAL HTML to include external JavaScripts.
  * @constant {string} SELF_NAME Name of this Node.js file.
+ * @constant {string} SHOWN_LIMIT_INITIAL Initial maximum limit of Tweats shown and search results shown.
  * @constant {string} SITE_ROOT This site's root directory.
  * @constant {string} TWEATMAXSIZE Maximum number of characters allowed in a Tweat message.
  * @constant {string} USERNAME Database username.
@@ -26,10 +26,12 @@ DATABASE_HOST = '192.168.0.3';
 DATABASE_NAME = "my_crandall";
 DATABASE_TABLE = "users";
 EMAIL_PASSWORD = 'y';
+FONT_INITIAL = "Helvetica";
 FONTSIZE = "18"; // pixels
 MY_PATH = 'c:/users/dave/node/tweater_node';
 PASSWORD = 'z'; // Database password
 SELF_NAME = "/";
+SHOWN_LIMIT_INITIAL = 50;
 SITE_ROOT = "/";
 TWEATMAXSIZE = "250"; // Maximum size of Tweat in characters
 USERNAME = "crandall";
@@ -38,7 +40,7 @@ USERNAME = "crandall";
 app = require("express")();
 bodyParser = require("body-parser");
 busboy = require("connect-busboy"); 
-cookieParser = require("cookie-parser") ;
+cookieParser = require("cookie-parser");
 Cookies = require("cookies"); 
 crypto = require("crypto"); // encryption
 express = require("express");
@@ -59,6 +61,7 @@ transporter = nodemailer.createTransport({ service: 'Gmail', auth: { user: 'dava
 /**
  * Create globals:
  *
+ * @private {string} [bigfont="27"] Size of big font in pixels.
  * @private {string} [browser_name="Chrome"] Browser name.
  * @private {string} [chat="false"] Chat Mode status.
  * @private {string} [chat_button="success"] Chat Mode button color type.
@@ -82,6 +85,7 @@ transporter = nodemailer.createTransport({ service: 'Gmail', auth: { user: 'dava
  * @private {string} margin_left Left margin on home page of user.
  * @private {string} message Message for user.
  * @private {string} name Name of user.
+ * @private {string} no_quote_tweat Version of Tweat displayed in delete popup prompt.
  * @private {string} password User's password.
  * @private {string} password_hash Encryption hash of user's password.
  * @private {string} password_reset_hash Encryption hash of password reset code.
@@ -127,8 +131,9 @@ esc_name = "";
 followed_ones_list = "";
 follower_email = "";
 followers_count = 0;
-font = "Helvetica";
+font = FONT_INITIAL;
 font_size = "18";
+bigfont = font_size * 1.5;
 header = "";
 help_html = "";
 index_html = "";
@@ -140,6 +145,7 @@ interests_array = [];
 margin_left = "";
 message = "";
 name = ""; // user's name
+no_quote_tweat = "";
 password = "";
 password_hash = "";
 password_reset_hash = "";
@@ -152,7 +158,7 @@ port = process.env.PORT || 8888;
 post_body = "";
 query = {};
 result = {};
-shown_limit = 50;
+shown_limit = SHOWN_LIMIT_INITIAL;
 sign_in_width = "";
 signout_html = "";
 stay_logged_in = "";
@@ -286,13 +292,13 @@ upload_picture_html = heredoc(function() {/*
   <BODY style="background-color:#00DD00;padding:8px;font-family:Courier New, Helvetica};">
     <DIV style="width:100%">
       <DIV class="center">
-        <H1 class="center">Picture Upload:</H1>
+        <H1 class="center">&nbsp;Picture Upload:</H1>
       </DIV>
     </DIV>
     <DIV class="center">
     <img src="/users/tweatycamera.png" style="float:left;width:50%;height:50%;margin-right:10px" />
       <FORM action="/upload_picture_uploading" method="post" enctype="multipart/form-data">
-        <H2>Please select a picture file to upload (only jpg, jpeg, gif and png image files are allowed, and the maximum file size is 1MB):</H2>
+        <H2>Please select a picture file to upload (only jpg, jpeg, gif and png image files are allowed, and the maximum file size is 1 megabyte):</H2>
         <INPUT type="file" name="file" id="file" size="70">
         <INPUT type="submit" value="Upload Picture File" name="submit">
         <INPUT type="button" value="Cancel" onclick="window.close();">
@@ -357,7 +363,7 @@ signout_html = heredoc(function() {/*
 
 app.use(morgan('dev')); // development tracing.
 app.use(bodyParser.urlencoded({extended: true, keepExtensions: true, uploadDir: __dirname + '/pictures' }));
-app.use(busboy({ highWaterMark: 2 * 1024 * 1024, limits: { fileSize: 10 * 1024 * 1024 } })); // Picture upload size limit.
+app.use(busboy({ highWaterMark: 2 * 1024 * 1024, limits: { fileSize: 1024 * 1024 } })); // Picture upload size limit.
 
 /**
  * Set up pictures folder redirect.
@@ -392,23 +398,12 @@ app.get('/', function(req, res) {
   if (cookies.get('user_name') && cookies.get('password')) {
     var given_user_name = cookies.get('user_name').replace("%40","@");
     password = cookies.get('password').replace("%40","@");
+
 // Adjust Chat Mode start/stop button and its action
-  chat = 'false';
-  if (cookies.get('chat')) { // Chat mode refreshes Tweat display every 10 seconds for real-time conversation
-    chat = cookies.get('chat');
-  }
-  if (chat == "true") {
-    chat_button = 'danger';
-    chat_button_action = 'Stop';
-    chat_toggle = 'false';
-  } else {
-    chat_button = 'success';
-    chat_button_action = 'Start';
-    chat_toggle = 'true';
-  }
+    chat_setup();
 
     main_init(req, res); // Initialize main variables and also data from cookies
-    password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+    password_hash = passwordHash(password);
     user = _.find(users, function(u) {
       return u.user_name == given_user_name;
     });
@@ -445,7 +440,7 @@ app.get('/', function(req, res) {
           res.cookie("chat_timeout", date.getTime() + 300000, {maxAge: 7200000});
         }
       }
-      res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+      writeHeadHTML(res);
       show_home_page(req, res);
       return;
     }
@@ -492,23 +487,13 @@ app.get('/get_tweats/:name', function(req, res) {
       return;
     }
   }
-  if (cookies.get('font_size')) {
-    font_size = cookies.get('font_size');
-  } else {
-    font_size = FONTSIZE;
-    bigfont = font_size * 1.5;
-  }
-  if (cookies.get('font_family')) {
-    font = cookies.get('font_family') + ", Helvetica";
-  } else {
-    font = "Helvetica";
-  }
+  getFont();
   if (cookies.get('tweat_width')) {
     tweat_width = cookies.get('tweat_width');
   } else {
     tweat_width = Math.floor(1600 / font_size);
   }
-  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  writeHeadHTML(res);
   var client = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
   client.query("USE " + DATABASE_NAME);
   client.query("SET NAMES 'utf8'");
@@ -559,15 +544,7 @@ app.get('/get_tweats/:name', function(req, res) {
             "</b>:&nbsp;&nbsp;</td><td>" + 
             wordwrap(myrow_tweat.replace(/%20/g, " "), tweat_width, '<br />', true));
           if (myrow_name == name_shown) {
-            no_quote_tweat = myrow_tweat.substr(0,80).replace('"', ' ');
-            no_quote_tweat = no_quote_tweat.replace(/'/g, "&apos;");
-            no_quote_tweat = no_quote_tweat.replace(/"/g, "&apos;&apos;");
-            no_quote_tweat = no_quote_tweat.replace(/\t/g, " ");
-            no_quote_tweat = no_quote_tweat.replace(/\n/g, " ");
-            no_quote_tweat = no_quote_tweat.replace(/\r/g, " ");
-            no_quote_tweat = no_quote_tweat.replace(/\f/g, " ");
-            no_quote_tweat = no_quote_tweat.replace(/</g, "&lt;");
-            no_quote_tweat = no_quote_tweat.replace(/>/g, "&gt;");
+            no_quote_tweat = noQuoteTweat(myrow_tweat);
 
 // X button to delete Tweat
             res.write("&nbsp;&nbsp;&nbsp;<span style='color:black;background-color:red' onclick='if (confirm(\"Are you sure you want to delete this Tweat?:\\n  " + 
@@ -602,7 +579,7 @@ app.get('/user/signout', function(req, res) {
   res.cookie('user_name', '');
   res.cookie('password', '');
   res.cookie('stay_logged_in', 'off');
-  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  writeHeadHTML(res);
   res.end(signout_html);
 });
 
@@ -610,7 +587,7 @@ app.get('/help', function(req, res) {
 /**
  * Display Tweater help page.
  */
-  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  writeHeadHTML(res);
   res.end('<!DOCTYPE html><html><head><title>Tweater Help</title><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css"><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css"><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script><body style="background-color:#99D9EA;font-size:' + font_size + 'px"><div><a href="' + SELF_NAME + '" style="font-size:' + 
 bigfont + 'px;color:red;background-color:#990099"><b>&nbsp;Tweater Help&nbsp;</b></a></div><img src="/users/tweatyquestion.png" style="float:right" />' + help_html);
 });
@@ -619,7 +596,7 @@ app.get('/upload_picture', function(req, res) {
 /**
  * Display picture upload form.
  */
-  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  writeHeadHTML(res);
   res.end(upload_picture_html);
   return;
 });
@@ -642,7 +619,7 @@ app.post('/post_tweat', function(req, res) {
     cookies = new Cookies(req, res);
     var date = new Date();
     res.cookie("chat_timeout", (date.getTime() + 300000));
-    res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+    writeHeadHTML(res);
     post_tweat(req, res);
   }
   message = "";
@@ -668,7 +645,7 @@ app.post('/user/signin', function(req, res) {
   }
   user_name = given_user.user_name;
   password = given_user.password.replace("%40","@");
-  password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+  password_hash = passwordHash(password);
   user = _.find(users, function(u) {
     return u.user_name == given_user.user_name;
   });
@@ -715,7 +692,7 @@ app.post('/user/signin', function(req, res) {
   interests_words = user.interests_words;
   email = user.email;
   tweat_notify = user.tweat_notify;
-  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  writeHeadHTML(res);
   res.end("<!DOCTYPE html><html><head><title>Tweater</title><body onload=\"location.replace('/');\"><h1><b style='font-size:" + 
     "72px;color:red;background-color:violet'>&nbsp;Tweater&nbsp;</b></h1><h1 style='text-align:center'>" +
     "<a href='/' onclick=\"location.replace('/');\">If you're not redirected to Tweater in a few seconds" +
@@ -729,7 +706,7 @@ app.post("/info_update", function(req, res) {
   cookies = new Cookies(req, res);
   user_name = cookies.get('user_name').replace("%40", "@");
   password = cookies.get('password').replace("%40", "@");
-  password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+  password_hash = passwordHash(password);
   user = _.find(users, function(u) {
     return u.user_name == user_name;
   });
@@ -742,7 +719,7 @@ app.post("/info_update", function(req, res) {
       throw err8;
     }
     if (!results8.length) {
-      res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+      writeHeadHTML(res);
       res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Error!</title></head><body style='background-color:#99D9EA;padding:8px;" + 
       "font-family:" + font + ";font-size:" + font_size + "px'>Sorry, something went wrong! The information was not updated!</body></html>");
       return;
@@ -895,7 +872,7 @@ app.post("/info_update", function(req, res) {
               user.interests = interests;
               user.interests_words = new_interests;
               message = "Interests and Information updated!";
-              res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+              writeHeadHTML(res);
               show_home_page(req, res);
             });
           });
@@ -956,7 +933,7 @@ app.post('/user/new', function(req, res) {
   }
   user_name = user.user_name;
   password = user.new_user_password.replace("%40","@");
-  password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+  password_hash = passwordHash(password);
   name = user.name.trim().replace(/\+/g, " ").replace(/\s+/g, " ").replace(/%2B/g, "+");
   user.password = password;
   user.password_hash = password_hash;
@@ -1005,7 +982,7 @@ app.post('/user/new', function(req, res) {
 // Set session cookies
           res.cookie('user_name', user_name);
           res.cookie('password', password);
-          res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+          writeHeadHTML(res);
           show_home_page(req, res);
         }
       });
@@ -1019,31 +996,20 @@ app.get('/hashtag_search_results/:hashtag', function(req, res) {
  * Display Hashtag Search Results.
  */
   cookies = new Cookies(req, res);
-  if (cookies.get('font_size')) {
-    font_size = cookies.get('font_size');
-  } else {
-    font_size = FONTSIZE;
-  }
-  bigfont = font_size * 1.5;
-  
+  getFont();  
   if (cookies.get('shown_limit')) {
     shown_limit = cookies.get('shown_limit');
   } else {
-    shown_limit = 50;
+    shown_limit = SHOWN_LIMIT_INITIAL;
   }
   
-  if (cookies.get('font_family')) {
-    font = cookies.get('font_family') + ", Helvetica";
-  } else {
-    font = "Helvetica";
-  }
   hashtag = req.params.hashtag;
   hashtag_win = hashtag;
   hashtag = hashtag.replace(/\*/g, "%");
   hashtag = hashtag.replace(/\?/g, "_");
   user_name = cookies.get('user_name').replace("%40","@");
   password = cookies.get('password').replace("%40","@");
-  password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+  password_hash = passwordHash(password);
   user = _.find(users, function(u) {
     return u.user_name == user_name;
   });
@@ -1053,7 +1019,7 @@ app.get('/hashtag_search_results/:hashtag', function(req, res) {
       admin = true;
     }
   }
-  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  writeHeadHTML(res);
   res.write("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Hashtag Search Results for " + 
     hashtag_win + "</title><script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js'>" + 
     "</script><script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js'></script>" + 
@@ -1105,16 +1071,7 @@ app.get('/hashtag_search_results/:hashtag', function(req, res) {
 
 // X button for administrator to delete Tweat
           if (admin) {
-            var no_quote_tweat = tweat.substr(0,80).replace('"', ' ');
-            no_quote_tweat = no_quote_tweat.replace(/'/g, "&apos;");
-            no_quote_tweat = no_quote_tweat.replace(/"/g, "&apos;&apos;");
-            no_quote_tweat = no_quote_tweat.replace(/\t/g, " ");
-            no_quote_tweat = no_quote_tweat.replace(/\n/g, " ");
-            no_quote_tweat = no_quote_tweat.replace(/\r/g, " ");
-            no_quote_tweat = no_quote_tweat.replace(/\f/g, " ");
-            no_quote_tweat = no_quote_tweat.replace(/</g, "&lt;");
-            no_quote_tweat = no_quote_tweat.replace(/>/g, "&gt;");
-
+            no_quote_tweat = noQuoteTweat(myrow_tweat);
             res.write("&nbsp;&nbsp;<img src='/users/xdel.png' style='position:relative;top:7px' onclick='" + 
               "if (confirm(\"Are you sure you want to delete this Tweat?:\\n  " + no_quote_tweat + 
               "...\")) {window.open(\"/delete_tweat/" + tid + "\");}' />");
@@ -1135,27 +1092,16 @@ app.post('/user_search_results', function(req, res) {
  */
   var search_any = req.body.search_any;
   cookies = new Cookies(req, res);
-  if (cookies.get('font_size')) {
-    font_size = cookies.get('font_size');
-  } else {
-    font_size = FONTSIZE;
-  }
-  bigfont = font_size * 1.5;
-  
+  getFont();  
   if (cookies.get('shown_limit')) {
     shown_limit = cookies.get('shown_limit');
   } else {
-    shown_limit = 50;
+    shown_limit = SHOWN_LIMIT_INITIAL;
   }
   
-  if (cookies.get('font_family')) {
-    font = cookies.get('font_family') + ", Helvetica";
-  } else {
-    font = "Helvetica";
-  }
   user_name = cookies.get('user_name').replace("%40","@");
   password = cookies.get('password').replace("%40","@");
-  password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+  password_hash = passwordHash(password);
   user = _.find(users, function(u) {
     return ((u.user_name == user_name) && (u.password_hash == password_hash));
   });
@@ -1169,7 +1115,7 @@ app.post('/user_search_results', function(req, res) {
     all_users_display(req, res);
     return;
   }
-  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  writeHeadHTML(res);
   res.write("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>User Search Results</title>" +
     "<script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js'></script>" +
     "<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js'></script>" +
@@ -1275,28 +1221,16 @@ app.post('/boolean_search_results', function(req, res) {
  * at most two search terms connected by AND, OR or NOT.
  */
   cookies = new Cookies(req, res);
-  if (cookies.get('font_size')) {
-    font_size = cookies.get('font_size');
-  } else {
-    font_size = FONTSIZE;
-  }
-  bigfont = font_size * 1.5;
-  
+  getFont();  
   if (cookies.get('shown_limit')) {
     shown_limit = cookies.get('shown_limit');
   } else {
-    shown_limit = 50;
+    shown_limit = SHOWN_LIMIT_INITIAL;
   }
   
-  if (cookies.get('font_family')) {
-    font = cookies.get('font_family') + ", Helvetica";
-  } else {
-    font = "Helvetica";
-  }
-
   user_name = cookies.get('user_name').replace("%40","@");
   password = cookies.get('password').replace("%40","@");
-  password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+  password_hash = passwordHash(password);
   user = _.find(users, function(u) {
     return u.user_name == user_name;
   });
@@ -1307,7 +1241,7 @@ app.post('/boolean_search_results', function(req, res) {
     }
   }
 
-  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  writeHeadHTML(res);
   res.write("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Boolean Search Results</title>" +
     "<script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js'></script>" +
     "<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js'></script>" +
@@ -1437,7 +1371,7 @@ app.get('/view_user_name/:user_name', function(req, res) {
   cookies = new Cookies(req, res);
   user_name = cookies.get('user_name').trim().replace("%40","@");
   password = cookies.get('password').trim().replace("%40","@");
-  password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+  password_hash = passwordHash(password);
   user = _.find(users, function(u) {
     return u.user_name == user_name;
   });
@@ -1447,25 +1381,14 @@ app.get('/view_user_name/:user_name', function(req, res) {
       view_admin = true;
     }
   }
-  if (cookies.get('font_size')) {
-    font_size = cookies.get('font_size');
-  } else {
-    font_size = FONTSIZE;
-  }
-  bigfont = font_size * 1.5;
-  
+  getFont();    
   if (cookies.get('shown_limit')) {
     shown_limit = cookies.get('shown_limit');
   } else {
-    shown_limit = 50;
+    shown_limit = SHOWN_LIMIT_INITIAL;
   }
   
-  if (cookies.get('font_family')) {
-    font = cookies.get('font_family') + ", Helvetica";
-  } else {
-    font = "Helvetica";
-  }
-  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  writeHeadHTML(res);
   var view_user_name = req.params.user_name;
   if ((!view_user_name) || (view_user_name == "")) {
     view_name = "Nobody";
@@ -1532,7 +1455,7 @@ app.get('/view_user_name/:user_name', function(req, res) {
                 res.write("<p>" + wordwrap(myrow_tweat, tweat_width, '<br />', true));
 // Red X button for administrator to delete Tweat
                 if (view_admin) {
-                  no_quote_tweat = strtran(myrow_tweat.substr(0,80), "\"'\t\r\n\f", "      ");
+                  no_quote_tweat = noQuoteTweat(myrow_tweat);
                   res.write("&nbsp;&nbsp;<img src='/users/xdel.png' style='position:relative;top:-2px' " + 
                     "onclick='if (confirm(\"Are you sure you want to delete this Tweat?:\\n  " + 
                     no_quote_tweat + "...\")) {window.open(\"/delete_tweat/" + tid + "\");}' />");
@@ -1559,27 +1482,15 @@ app.get('/follow/:vuname/:vname', function(req, res) {
   cookies = new Cookies(req, res);
   user_name = cookies.get('user_name').trim().replace("%40","@");
   password = cookies.get('password').trim().replace("%40","@");
-  password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+  password_hash = passwordHash(password);
   followed_one = req.params.vuname;
   followed_name = req.params.vname;
   user = _.find(users, function(u) {
     return ((u.user_name == user_name) && (u.password_hash == password_hash));
   });
 
-  if (cookies.get('font_size')) {
-    font_size = cookies.get('font_size');
-  } else {
-    font_size = FONTSIZE;
-  }
-  bigfont = font_size * 1.5;
-    
-  if (cookies.get('font_family')) {
-    font = cookies.get('font_family') + ", Helvetica";
-  } else {
-    font = "Helvetica";
-  }
-
-  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  getFont();  
+  writeHeadHTML(res);
   if (!user) {
     res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Follow Error</title></head><body " + 
       "style='background-color:#99D9EA;padding:8px;" + 
@@ -1649,27 +1560,15 @@ app.get('/unfollow/:vuname/:vname', function(req, res) {
   cookies = new Cookies(req, res);
   user_name = cookies.get('user_name').trim().replace("%40","@");
   password = cookies.get('password').trim().replace("%40","@");
-  password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+  password_hash = passwordHash(password);
   followed_one = req.params.vuname;
   followed_name = req.params.vname;
   user = _.find(users, function(u) {
     return ((u.user_name == user_name) && (u.password_hash == password_hash));
   });
 
-  if (cookies.get('font_size')) {
-    font_size = cookies.get('font_size');
-  } else {
-    font_size = FONTSIZE;
-  }
-  bigfont = font_size * 1.5;
-    
-  if (cookies.get('font_family')) {
-    font = cookies.get('font_family') + ", Helvetica";
-  } else {
-    font = "Helvetica";
-  }
-
-  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  getFont();  
+  writeHeadHTML(res);
   if (!user) {
     res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Unfollow Error</title></head><body " + 
       "style='background-color:#99D9EA;padding:8px;" + 
@@ -1737,20 +1636,8 @@ app.get('/change_password', function(req, res) {
 /**
  * Display password change form.
  */
-  if (cookies.get('font_size')) {
-    font_size = cookies.get('font_size');
-  } else {
-    font_size = FONTSIZE;
-  }
-  bigfont = font_size * 1.5;
-    
-  if (cookies.get('font_family')) {
-    font = cookies.get('font_family') + ", Helvetica";
-  } else {
-    font = "Helvetica";
-  }
-
-  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  getFont();  
+  writeHeadHTML(res);
   res.end("<!DOCTYPE html><html><head><title>Tweater Password Change</title>" +
     "<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css'>" +
     "<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css'>" +
@@ -1779,28 +1666,15 @@ app.post('/new_password', function(req, res) {
   old_password = req.body.old_password.trim().replace("%40","@");
   new_password = req.body.new_password.trim().replace("%40","@");
   password_confirm = req.body.password_confirm.trim().replace("%40","@");
-  old_password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(old_password).digest("base64");
-  new_password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(new_password).digest("base64");
-
+  old_password_hash = passwordHash(old_password);
+  new_password_hash = passwordHash(new_password);
   user = _.find(users, function(u) {
     return ((u.user_name == user_name) && (u.password_hash == old_password_hash));
   });
 
-  if (cookies.get('font_size')) {
-    font_size = cookies.get('font_size');
-  } else {
-    font_size = FONTSIZE;
-  }
-  bigfont = font_size * 1.5;
-    
-  if (cookies.get('font_family')) {
-    font = cookies.get('font_family') + ", Helvetica";
-  } else {
-    font = "Helvetica";
-  }
-
+  getFont();  
   if (!user) {
-    res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+    writeHeadHTML(res);
     res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Password Change Error</title></head>" + 
       "<body style='background-color:#99D9EA;padding:8px;font-family:" + font + ";font-size:" + font_size + 
       "px'>Sorry, the old password given is not correct! Remember that passwords are case-sensitive. You may " +
@@ -1808,7 +1682,7 @@ app.post('/new_password', function(req, res) {
     return;
   }
   if (new_password != password_confirm) {
-    res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+    writeHeadHTML(res);
     res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Password Change Error</title></head>" + 
       "<body style='background-color:#99D9EA;padding:8px;font-family:" + font + ";font-size:" + font_size + 
       "px'>Sorry, the new password given does not match the password confirmation given! Remember that " +
@@ -1816,7 +1690,7 @@ app.post('/new_password', function(req, res) {
     return;
   }
   if (new_password.length < 6) {
-    res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+    writeHeadHTML(res);
     res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Password Change Error</title></head>" + 
       "<body style='background-color:#99D9EA;padding:8px;font-family:" + font + ";font-size:" + font_size + 
       "px'>Sorry, the new password given isn't long enough. It must have at least 6 characters. You may try " +
@@ -1839,7 +1713,7 @@ app.post('/new_password', function(req, res) {
           throw err2;
         } else {
           if (!results2[0]['user_name']) {
-            res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+            writeHeadHTML(res);
             res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Password Change Error</title>" + 
               "</head><body style='background-color:#99D9EA;padding:8px;font-family:" + font + ";font-size:" +
               font_size + "px'>Sorry, your password has not been changed. Remember that passwords are " +
@@ -1877,7 +1751,7 @@ app.post('/new_password', function(req, res) {
               'Account</a> and click on the Tweat Notifications button at the left. ' + 
               'A pop-up prompt will appear. Type the word No and click on OK.'});
           }
-          res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+          writeHeadHTML(res);
           res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Password Changed!</title></head>" + 
             "<body style='background-color:#99D9EA;padding:8px;font-family:" + font + ";font-size:" + font_size +
             "px'>Your password has been changed to the new password given. <a href='/'>Please click <b>here</b>" +
@@ -1894,20 +1768,8 @@ app.get('/new_email_address', function(req, res) {
 /**
  * Display new email address form.
  */
-  if (cookies.get('font_size')) {
-    font_size = cookies.get('font_size');
-  } else {
-    font_size = FONTSIZE;
-  }
-  bigfont = font_size * 1.5;
-    
-  if (cookies.get('font_family')) {
-    font = cookies.get('font_family') + ", Helvetica";
-  } else {
-    font = "Helvetica";
-  }
-
-  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  getFont();  
+  writeHeadHTML(res);
   res.end("<!DOCTYPE html><html><head><title>Tweater New Email Address</title>" +
     "<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css'>" +
     "<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css'>" +
@@ -1938,27 +1800,15 @@ app.post('/new_email', function(req, res) {
   email = req.body.email.trim().replace("%40","@") || null;
   email_confirm = req.body.email_confirm.trim().replace("%40","@") || null;
   password = req.body.password.trim().replace("%40","@");
-  password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+  password_hash = passwordHash(password);
 
   user = _.find(users, function(u) {
     return ((u.user_name == user_name) && (u.password_hash == password_hash));
   });
 
-  if (cookies.get('font_size')) {
-    font_size = cookies.get('font_size');
-  } else {
-    font_size = FONTSIZE;
-  }
-  bigfont = font_size * 1.5;
-    
-  if (cookies.get('font_family')) {
-    font = cookies.get('font_family') + ", Helvetica";
-  } else {
-    font = "Helvetica";
-  }
-
+  getFont();  
   if (!user) {
-    res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+    writeHeadHTML(res);
     res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>New Email Error</title></head>" + 
       "<body style='background-color:#99D9EA;padding:8px;font-family:" + font + ";font-size:" + font_size + 
       "px'>Sorry, the password given is not correct! Remember that passwords are case-sensitive. You may " +
@@ -1966,7 +1816,7 @@ app.post('/new_email', function(req, res) {
     return;
   }
   if (email != email_confirm) {
-    res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+    writeHeadHTML(res);
     res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>New Email Error</title></head>" + 
       "<body style='background-color:#99D9EA;padding:8px;font-family:" + font + ";font-size:" + font_size + 
       "px'>Sorry, the new email address given does not match the email address confirmation given! Remember " +
@@ -1990,7 +1840,7 @@ app.post('/new_email', function(req, res) {
           throw err2;
         } else {
           if (!results2[0]['user_name']) {
-            res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+            writeHeadHTML(res);
             res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>New Email Address Error</title>" + 
               "</head><body style='background-color:#99D9EA;padding:8px;font-family:" + font + ";font-size:" +
               font_size + "px'>Sorry, your new email address has not been entered. You may try again.</body></html>");
@@ -2015,7 +1865,7 @@ app.post('/new_email', function(req, res) {
               'Account</a> and click on the Tweat Notifications button at the left. ' + 
               'A pop-up prompt will appear. Type the word No and click on OK.'});
           }
-          res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+          writeHeadHTML(res);
           res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>New Email Address Entered!</title>" + 
             "</head><body style='background-color:#99D9EA;padding:8px;font-family:" + font + ";font-size:" + 
             font_size + "px'>Your email address has been changed to " + email + ". <a onclick='window.close()' " +
@@ -2041,9 +1891,9 @@ app.get('/change_notify/:enable', function(req, res) {
   }
   user_name = cookies.get('user_name').trim().replace("%40","@");
   password = cookies.get('password').trim().replace("%40","@");
-  password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+  password_hash = passwordHash(password);
 
-  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  writeHeadHTML(res);
   user = _.find(users, function(u) {
     return ((u.user_name == user_name) && (u.password_hash == password_hash));
   });
@@ -2084,17 +1934,8 @@ app.get('/user/unsubscribe', function(req, res) { // Process unsubscribe request
   cookies = new Cookies(req, res);
   user_name = cookies.get('user_name').trim().replace("%40","@");
   password = cookies.get('password').trim().replace("%40","@");
-  password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
-  if (cookies.get('font_family')) { // Font is changeable
-    font = cookies.get('font_family') + ", Helvetica";
-  } else {
-    font = "Helvetica";
-  }
-  if (cookies.get('font_size')) { // Text size can be adjusted, especially for the vision-impaired
-    font_size = cookies.get('font_size');
-  } else {
-    font_size = FONTSIZE;
-  }
+  password_hash = passwordHash(password);
+  getFont();  
 
   var client = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
   client.query("USE " + DATABASE_NAME);
@@ -2131,34 +1972,24 @@ app.get('/delete_listed_user/:uid/:vuname', function(req, res) {
   cookies = new Cookies(req, res);
   user_name = cookies.get('user_name').trim().replace("%40","@");
   password = cookies.get('password').trim().replace("%40","@");
-  password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+  password_hash = passwordHash(password);
   user = _.find(users, function(u) {
     return u.user_name == user_name;
   });
   if (!user) {
-    res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+    writeHeadHTML(res);
     res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Error!</title></head><body style='background-color:#99D9EA;padding:8px;" + 
       "font-family:" + font + ";font-size:" + font_size + "px'>Sorry, something went wrong! The user was not deleted!</body></html>");
     return;
   }
 
   if ((user.admin_status != 1) || (password_hash != user.password_hash)) {
-    res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+    writeHeadHTML(res);
     res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>User deletion denied!</title></head><body style='background-color:#99D9EA;padding:8px;" + 
       "font-family:" + font + ";font-size:" + font_size + "px'>Sorry, you cannot delete the user!</body></html>");
     return;
   }
-
-  if (cookies.get('font_family')) { // Font is changeable
-    font = cookies.get('font_family') + ", Helvetica";
-  } else {
-    font = "Helvetica";
-  }
-  if (cookies.get('font_size')) { // Text size can be adjusted, especially for the vision-impaired
-    font_size = cookies.get('font_size');
-  } else {
-    font_size = FONTSIZE;
-  }
+  getFont();  
 
 // Administrator deletes a listed user
   var del_user_id = req.params.uid;
@@ -2169,7 +2000,7 @@ app.get('/delete_listed_user/:uid/:vuname', function(req, res) {
     if (err) {
       throw err;
     } else {
-      res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+      writeHeadHTML(res);
       res.end("<!DOCTYPE html><html><head><title>Tweat Delete</title><body onload=\"alert('The account of " + 
         "Username " + del_user_uname + " (ID #" + del_user_id + ") has been deleted.');" + 
         "window.close();\"><h1><b style='font-size:" + 
@@ -2281,25 +2112,14 @@ function get_home_page(req, res) {
         client7.end();
       }
       esc_name = name.replace(" ", "+"); // Version of user's name with space(s) changed to + for GET querystring
+
 // Adjust Chat Mode start/stop button and its action
-      chat = 'false';
-      if (cookies.get('chat')) { // Chat mode refreshes Tweat display every 10 seconds for real-time conversation
-        chat = cookies.get('chat');
-      }
-      if (chat == "true") {
-        chat_button = 'danger';
-        chat_button_action = 'Stop';
-        chat_toggle = 'false';
-      } else {
-        chat_button = 'success';
-        chat_button_action = 'Start';
-        chat_toggle = 'true';
-      }
+      chat_setup();
 
       main_init(req, res); // Initialize user header HTML and user variables from cookies
    
       status="";
-      unsubscribe_password = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+      unsubscribe_password = passwordHash(password);
       if (message) {
         formatted_message = '<div class="container" style="position:relative;top:-20px;margin:0px;padding:0px;' + 
         'height:' + parseInt(font_size * 0.5) + 'px;font-size:' + bigfont + 'px;color:red">' + message + 
@@ -2378,16 +2198,8 @@ function get_home_page(req, res) {
                 "</b>:</div><div class='col-md-9' style='margin-left: -2em; position:relative; left:46px'><p>" + 
                 wordwrap(myrow_tweat.replace(/%20/g, " "), tweat_width, '<br />', true);
               if ((myrow_name == name) || (user.admin_status == 1)) {
-                no_quote_tweat = myrow_tweat.substr(0,80).replace('"', ' ');
-                no_quote_tweat = no_quote_tweat.replace(/'/g, "&apos;");
-                no_quote_tweat = no_quote_tweat.replace(/"/g, "&apos;&apos;");
-                no_quote_tweat = no_quote_tweat.replace(/\t/g, " ");
-                no_quote_tweat = no_quote_tweat.replace(/\n/g, " ");
-                no_quote_tweat = no_quote_tweat.replace(/\r/g, " ");
-                no_quote_tweat = no_quote_tweat.replace(/\f/g, " ");
-                no_quote_tweat = no_quote_tweat.replace(/</g, "&lt;");
-                no_quote_tweat = no_quote_tweat.replace(/>/g, "&gt;");
-    
+                no_quote_tweat = noQuoteTweat(myrow_tweat);
+
 // X button to delete Tweat
                 tweat_list += "&nbsp;&nbsp;<img src='/users/xdel.png' style='position:relative;top:-1px' onclick='" + 
       "if (confirm(\"Are you sure you want to delete this Tweat?:\\n  " + no_quote_tweat + 
@@ -2871,14 +2683,7 @@ function main_init(req, res) {
   } else {
     text_color = "black";
   }
-  
-  if (cookies.get('font_size')) { // Text size can be adjusted, especially for the vision-impaired
-    font_size = cookies.get('font_size');
-  } else {
-    font_size = FONTSIZE;
-  }
-  bigfont = font_size * 1.5; // Large text size
-
+  getFont();  
   if (cookies.get('tweat_width')) { // Display width of Tweats is adjustable
     tweat_width = cookies.get('tweat_width');
   } else {
@@ -2888,17 +2693,12 @@ function main_init(req, res) {
   if (cookies.get('shown_limit')) { // Maximum number of Tweats and Search Results is adjustable
     shown_limit = cookies.get('shown_limit');
     if (isNaN(shown_limit)) {
-      shown_limit = 50;
+      shown_limit = SHOWN_LIMIT_INITIAL;
     }
   } else {
-    shown_limit = 50;
+    shown_limit = SHOWN_LIMIT_INITIAL;
   }
   
-  if (cookies.get('font_family')) { // Font is changeable
-    font = cookies.get('font_family') + ", Helvetica";
-  } else {
-    font = "Helvetica";
-  }
 
   browser_name = 'Chrome';
   if (cookies.get('browser_name')) { // Get browser name from cookie
@@ -3155,7 +2955,7 @@ function delete_tweat(req, res) {
   cookies = new Cookies(req, res);
   user_name = cookies.get('user_name').replace("%40","@");
   password = cookies.get('password').replace("%40","@");
-  password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+  password_hash = passwordHash(password);
 
   var client2 = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
   client2.query("USE " + DATABASE_NAME);
@@ -3185,7 +2985,7 @@ function delete_tweat(req, res) {
             message = "Tweat #" + tid + " was deleted.";
           }
           client3.end();
-          res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+          writeHeadHTML(res);
           res.end("<!DOCTYPE html><html><head><title>Tweat Delete</title><body onload=\"alert('" + message + 
             "');window.close();\"><h1><b style='font-size:" + 
             "72px;color:red;background-color:violet'>&nbsp;Tweater&nbsp;</b></h1><h1 style='text-align:center'>" +
@@ -3205,7 +3005,7 @@ function delete_tweat(req, res) {
               "left to reload the page.";
           }
           client3.end();
-          res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+          writeHeadHTML(res);
           res.end("<!DOCTYPE html><html><head><title>Tweat Delete</title><body onload=\"alert('" + message + 
             "');window.close();\"><h1><b style='font-size:" + 
             "72px;color:red;background-color:violet'>&nbsp;Tweater&nbsp;</b></h1><h1 style='text-align:center'>" +
@@ -3256,7 +3056,7 @@ function password_forgotten(req, res) {
         '&nbsp;&nbsp;&nbsp;&nbsp;' + tweamail + '<br /><br /><br /><br /><br /><br /><br /><br />' + 
         '<br /><br /><br /><br /><br /><br /><br /><br /><br /><br /></body></html>'});
 
-      password_reset_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password_reset_code).digest("base64");
+      password_reset_hash = passwordHash(password_reset_code);
       var client2 = mysql.createConnection({ host: 'localhost', user: 'root', password: PASSWORD, debug: false });
       client2.query("USE " + DATABASE_NAME);
       client2.query("SET NAMES 'utf8'");
@@ -3430,7 +3230,7 @@ function sign_in_or_register(req, res, message) {
   if (!email) {
     email = "";
   }
-  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  writeHeadHTML(res);
   res.end('<!DOCTYPE html><html><head><title>Tweater</title>' + SCRIPTS_EXTERNAL + turing +
 '<SCRIPT LANGUAGE="JavaScript">' + 
 '  function URLsetup() {' + 
@@ -3526,7 +3326,7 @@ function upload_picture_uploading(req, res) {
   if (cookies.get('user_name') && cookies.get('password')) {
     var given_user_name = cookies.get('user_name').replace("%40","@");
     password = cookies.get('password').replace("%40","@");
-    password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+    password_hash = passwordHash(password);
     user = _.find(users, function(u) {
       return u.user_name == given_user_name;
     });
@@ -3537,16 +3337,7 @@ function upload_picture_uploading(req, res) {
       message = "";
       error_sorry = "Sorry, there was an error uploading your picture file. ";
     
-      if (cookies.get('font_size')) {
-        font_size = cookies.get('font_size');
-      } else {
-        font_size = FONTSIZE;
-      }
-      if (cookies.get('font_family')) {
-        font = cookies.get('font_family') + ", Helvetica";
-      } else {
-        font = "Helvetica";
-      }
+      getFont();  
       var fstream;
       req.pipe(req.busboy);
       req.busboy.on('file', function (fieldname, file, filename, encoding, mimetype) {
@@ -3569,7 +3360,7 @@ function upload_picture_uploading(req, res) {
           } else {
             user_name = cookies.get('user_name').replace("%40","@");
             password = cookies.get('password').replace("%40","@");
-            password_hash = crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+            password_hash = passwordHash(password);
             uploadOk = 1;
           }
 
@@ -3611,7 +3402,7 @@ function upload_picture_uploading(req, res) {
                             "d click on your browser's Refresh button or click on Home at the top left. Not" + 
                             "e: You can also post URLs of pictures that start with \\\"http\\\". After typing o" + 
                             "r pasting the URL in the Tweat textbox, click the Pic button and press Enter.";
-                          res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+                          writeHeadHTML(res);
                           res.end("<!DOCTYPE HTML><HTML><head><script>" + 
                             "alert(\"" + message + "\"); window.close();</script></head><body></body></html>");
                           message = "";
@@ -3647,7 +3438,7 @@ function upload_picture_uploading(req, res) {
 }
 
 function all_users_display(req, res) {
-  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+  writeHeadHTML(res);
   res.write("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>All Users Search Results</title>" +
     "<script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js'></script>" +
     "<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js'></script>" +
@@ -3691,6 +3482,58 @@ function all_users_display(req, res) {
     res.end("</ul><br /><br /></body></html>");  
     client.end();
   });
+}
+
+function chat_setup() {
+// Adjust Chat Mode start/stop button and its action
+  chat = 'false';
+  if (cookies.get('chat')) { // Chat mode refreshes Tweat display every 10 seconds for real-time conversation
+    chat = cookies.get('chat');
+  }
+  if (chat == "true") {
+    chat_button = 'danger';
+    chat_button_action = 'Stop';
+    chat_toggle = 'false';
+  } else {
+    chat_button = 'success';
+    chat_button_action = 'Start';
+    chat_toggle = 'true';
+  }
+}
+
+function passwordHash(password) {
+  return crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
+}
+
+function writeHeadHTML(res) {
+  res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
+}
+
+function getFont() {
+  if (cookies.get('font_size')) {
+    font_size = cookies.get('font_size');
+  } else {
+    font_size = FONTSIZE;
+    bigfont = font_size * 1.5;
+  }
+  if (cookies.get('font_family')) {
+    font = cookies.get('font_family') + ", " + FONT_INITIAL;
+  } else {
+    font = FONT_INITIAL;
+  }
+}
+
+function noQuoteTweat(tweat) {
+//*** chain replaces
+  var no_quote = tweat.substr(0,80).replace('"', ' ');
+  no_quote = no_quote.replace(/'/g, "&apos;");
+  no_quote = no_quote.replace(/"/g, "&apos;&apos;");
+  no_quote = no_quote.replace(/\t/g, " ");
+  no_quote = no_quote.replace(/\n/g, " ");
+  no_quote = no_quote.replace(/\r/g, " ");
+  no_quote = no_quote.replace(/\f/g, " ");
+  no_quote = no_quote.replace(/</g, "&lt;");
+  return no_quote.replace(/>/g, "&gt;");
 }
 
 app.listen(port);
