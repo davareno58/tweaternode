@@ -1,3 +1,6 @@
+// Move js msgs from a new page to same page & put resulting msg in red on reloaded home page like info updated.
+// To do: chat & non-chat w/ 2 computers; DRY: more functions. More comments.
+
 /**
  * @fileOverview Tweater Twitter-like social media application.
  * @version 2.0
@@ -96,7 +99,7 @@ transporter = nodemailer.createTransport({ service: 'Gmail', auth: { user: 'dava
  * @private {string} picture_url URL of user's uploaded image file.
  * @private {string} port Port for Tweater app website.
  * @private {string} post_body Variable names and values from POST.
- * @private {string{}} query object with keys and values from GET querystring variables.
+ * @private {string{}} query Object with keys and values from GET querystring variables.
  * @private {string{}} result User search result object.
  * @private {string} ret Browser version.
  * @private {number} [shown_limit=50] Maximum number of Tweats and Search Results.
@@ -270,7 +273,7 @@ AAAAAElFTkSuQmCC" alt="Tweaty" style="float:left">';
 /**
  * Help page HTML.
  */
-help_html = '<ul><li>To show a list of all users, just click the User Search button at the right.</li><li>Click your browser\'s Back button to go back to previous page(s).</li><li>To update your page or to remove red messages, click on Home at the top left<br />(or your browser\'s Refresh button).</li><li>Cookies and JavaScript must be enabled for some functions.</li><li>The User Search searches for names, usernames, information and interests,<br />and has a limit of 10 search words per search.</li><li>In a Boolean Search, at least the first term must be filled in.</li><li>Wildcards may be used in Hashtag Searches and Boolean Searches:<br /> ? for any one character, and * for any zero or more characters.</li><li>The Limit button at the right sets the number of Tweats shown and the number<br />of Search Results.</li><li>To turn on Chat Mode, click the green Start Chat button at the right.<br /> It will turn into a red Stop Chat button. In Chat Mode, the Tweats will be<br /> redisplayed every ten seconds, so any Tweats sent by someone<br /> you\'re following will appear automatically without having to click Home<br /> to reload the page. If the person you\'re following is also following you,<br /> and he\'s in Chat Mode, your new Tweats should appear automatically<br /> every ten seconds on his page as well, so you can have a real-time<br /> text conversation in Chat Mode. Actually, several people who are all following each other<br />and are in Chat Mode can have a multi-person conversation! In Chat Mode, your picture<br />is moved to the bottom of the page, and only the ten most recent Tweats are displayed.<br /> If you don\'t send a Tweat for five minutes, Chat Mode will be turned off automatically,<br /> and you would have to click Start Chat to restart it. Tweats sent in Chat Mode will be deleted<br /> automatically after 24 hours, so they can\'t have hashtags, and no email notifications<br /> are sent with these Tweats.</li><li>To post a picture by using a URL beginning with "http", type or paste it into the Tweat textbox,<br /> and then click the Pic button before pressing Enter.</li><li>To add a hashtag to a Tweat, just include the # sign followed by the hashtag,<br /> such as #popmusic (with no spaces between multiple words). Only one hashtag<br /> can be used in each Tweat, but you could post the same Tweat twice<br />with different hashtags, theoretically... &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a style="background-color:red;float:right" href="" onclick="window.close();">&nbsp;CLOSE WINDOW&nbsp;</a></li></ul></body></html>';
+help_html = '<ul><li>To show a list of all users, just click the User Search button at the right.</li><li>Click your browser\'s Back button to go back to previous page(s).</li><li>To update your page or to remove red messages, click on Home at the top left<br />(or your browser\'s Refresh button).</li><li>Cookies and JavaScript must be enabled for some functions.</li><li>The User Search searches for names, usernames, information and interests,<br />and has a limit of 10 search words per search.</li><li>In a Boolean Search, at least the first term must be filled in.</li><li>Wildcards may be used in Hashtag Searches and Boolean Searches:<br /> ? for any one character, and * for any zero or more characters.</li><li>The Limit button at the right sets the number of Tweats shown and the number<br />of Search Results.</li><li>To turn on Chat Mode, click the green Start Chat button at the right.<br /> It will turn into a red Stop Chat button. In Chat Mode, the Tweats will be<br /> redisplayed every ten seconds, so any Tweats sent by someone<br /> you\'re following will appear automatically without having to click Home<br /> to reload the page. If the person you\'re following is also following you,<br /> and he\'s in Chat Mode, your new Tweats should appear automatically<br /> every ten seconds on his page as well, so you can have a real-time<br /> text conversation in Chat Mode. Actually, several people who are all following each other<br />and are in Chat Mode can have a multi-person conversation! In Chat Mode, your picture<br />is moved to the bottom of the page, and only the ten most recent Tweats are displayed.<br /> If you don\'t send a Tweat for five minutes, Chat Mode will be turned off automatically,<br /> and you would have to click Start Chat to restart it. Tweats sent in Chat Mode will be deleted<br /> automatically after 24 hours, so they can\'t have hashtags, and no email notifications<br /> are sent with these Tweats.</li><li>To post a picture by using a URL beginning with "http", type or paste it into the Tweat textbox,<br /> and then click the Pic button before pressing Enter.</li><li>To add a hashtag to a Tweat, just include the # sign followed by the hashtag,<br /> such as #popmusic (with no spaces between multiple words). Only one hashtag<br /> can be used in each Tweat, but you could post the same Tweat twice<br />with different hashtags, theoretically... <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a style="background-color:red;float:right" href="" onclick="window.close();">&nbsp;CLOSE WINDOW&nbsp;</a></li></ul></body></html>';
 
 /**
  * HTML heredocs.
@@ -288,6 +291,7 @@ upload_picture_html = heredoc(function() {/*
         background-color: #00DD00;
       }
     </STYLE>
+    <link rel="shortcut icon" href="/users/favicon.png" type="image/png">
   </HEAD>
   <BODY style="background-color:#00DD00;padding:8px;font-family:Courier New, Helvetica};">
     <DIV style="width:100%">
@@ -315,6 +319,7 @@ index_html = heredoc(function() {/*
     <TITLE>TWEATER</TITLE>
     <META NAME="description" CONTENT="Tweater Social Site"> 
     <META NAME="keywords" CONTENT="tweater, social site, tweats">
+    <link rel="shortcut icon" href="/users/favicon.png" type="image/png">
     <SCRIPT LANGUAGE="JavaScript">
     <!--
 function openit() {
@@ -350,6 +355,7 @@ signout_html = heredoc(function() {/*
     <META NAME="description" CONTENT="Tweater Social Site"> 
     <META NAME="keywords" CONTENT="tweater, social site, tweats">
     <META http-equiv=Content-Type content='text/html; charset=UTF-8' />
+    <link rel="shortcut icon" href="/users/favicon.png" type="image/png">
   </HEAD>
   <BODY LINK="#C00000" VLINK="#800080" alink="#FFFF00" bgcolor="#99D9EA" onLoad="openit()">
     <h1 style='text-align:center'>Tweater Signout:  You are now signed out. (Please close your browser for safety.)</h1>
@@ -412,16 +418,18 @@ app.get('/', function(req, res) {
       status = user.admin_status;
       user_name = user.user_name;
       name = user.name;
+      cookies = new Cookies(req, res);
       if (stay_logged_in == "on") {
 // Set cookies to remain signed in.
-        var date2 = new Date();
-        date2.setTime(date2.getTime() + (86400000 * 365 * 67));
-        cookies.set('user_name', user_name, date2);
-        cookies.set('password', password, date2);
+        var date = new Date();
+        date.setTime(date.getTime() + (86400000 * 365 * 67));
+        res.cookie('user_name', user_name, {expires: date});
+        res.cookie('password', password, {expires: date});
+        res.cookie('stay_logged_in', 'on', {expires: date});
       } else {
 // Set session cookies
-        cookies.set('user_name', user_name); // Set cookies to be deleted
-        cookies.set('password', password);
+        res.cookie('user_name', user_name); // Set cookies to be deleted
+        res.cookie('password', password);
       }
       id = user.id;
       picture_ext = user.picture_ext;
@@ -505,7 +513,10 @@ app.get('/get_tweats/:name', function(req, res) {
     } else {
 
 // Display Tweats in iframe with 10 second refresh for chat mode
-      res.write("<!DOCTYPE html><html><head><meta charset='utf-8' />" + refresh + "<title>Tweats:</title></head><body style='color:black;background-color:#c8bfe7;padding:8px;font-family:" + font + ";font-size:" + font_size + "px'>" + timeout_message + "<table>");
+      res.write("<!DOCTYPE html><html><head><meta charset='utf-8' />" + refresh + "<title>Tweats:</title>" + 
+        "<link rel='shortcut icon' href='/users/favicon.png' type='image/png'></head><body style='color:black;" +
+        "background-color:#c8bfe7;padding:8px;font-family:" + font + ";font-size:" + font_size + "px'>" + 
+        timeout_message + "<table>");
       timeout_message = "";
       if (results.length) {
         for (var row = 0; row < results.length; row++) {
@@ -583,13 +594,39 @@ app.get('/user/signout', function(req, res) {
   res.end(signout_html);
 });
 
+app.get('/stay_logged_on', function(req, res) {
+/**
+ * Set cookies for user to remain signed in.
+ */
+  cookies = new Cookies(req, res);
+  var date = new Date();
+  date.setTime(date.getTime() + (86400000 * 365 * 67));
+  res.cookie('user_name', user_name, {expires: date});
+  res.cookie('password', password, {expires: date});
+  res.cookie('stay_logged_in', 'on', {expires: date});
+
+  writeHeadHTML(res);
+  res.end("<!DOCTYPE html><html><head><title>Remaining Signed In</title><link rel='shortcut icon' " + 
+    "href='/users/favicon.png' type='image/png'><body onload=\"alert('You\\'ll now " + 
+    "remain signed in.');window.close();\"><h1><b style='font-size:" + 
+    "72px;color:red;background-color:violet'>&nbsp;Tweater&nbsp;</b></h1><h1 style='text-align:center'>" +
+    "<a href='/' onclick=\"location.replace('/');\">If you're not redirected to Tweater in a few " +
+    "seconds, please click here.</a></h1></body></html>");
+});
+
 app.get('/help', function(req, res) {
 /**
  * Display Tweater help page.
  */
   writeHeadHTML(res);
-  res.end('<!DOCTYPE html><html><head><title>Tweater Help</title><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css"><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css"><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script><body style="background-color:#99D9EA;font-size:' + font_size + 'px"><div><a href="' + SELF_NAME + '" style="font-size:' + 
-bigfont + 'px;color:red;background-color:#990099"><b>&nbsp;Tweater Help&nbsp;</b></a></div><img src="/users/tweatyquestion.png" style="float:right" />' + help_html);
+  res.end('<!DOCTYPE html><html><head><title>Tweater Help</title><link rel="shortcut icon" ' + 
+    'href="/users/favicon.png" type="image/png"><link rel="stylesheet" ' + 
+    'href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css"><link rel="stylesheet" ' + 
+    'href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">' + 
+    '<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>' + 
+    '<body style="background-color:#99D9EA;font-size:' + font_size + 'px"><div><a href="' + SELF_NAME + 
+    '" style="font-size:' + bigfont + 'px;color:red;background-color:#990099"><b>&nbsp;Tweater Help&nbsp;' + 
+    '</b></a></div><img src="/users/tweatyquestion.png" style="float:right" />' + help_html);
 });
 
 app.get('/upload_picture', function(req, res) {
@@ -660,7 +697,7 @@ app.post('/user/signin', function(req, res) {
       }
     }
   }
-  if (message) {
+  if (message !="") {
     sign_in_or_register(req, res, message);
     return;
   }
@@ -670,16 +707,19 @@ app.post('/user/signin', function(req, res) {
   name = user.name;
   interests = user.interests || "";
   cookies = new Cookies(req, res);
+
   if (stay_logged_in == "on") {
 // Set cookies to remain signed in.
     var date = new Date();
     date.setTime(date.getTime() + (86400000 * 365 * 67));
     res.cookie('user_name', user_name, {expires: date});
     res.cookie('password', password, {expires: date});
+    res.cookie('stay_logged_in', 'on', {expires: date});
   } else {
-// Set session cookies
+// Set session cookies to be deleted
     res.cookie('user_name', user_name);
     res.cookie('password', password);
+    res.cookie('stay_logged_in', 'off');
   }
   id = user.id;
   picture_ext = user.picture_ext;
@@ -1021,7 +1061,8 @@ app.get('/hashtag_search_results/:hashtag', function(req, res) {
   }
   writeHeadHTML(res);
   res.write("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Hashtag Search Results for " + 
-    hashtag_win + "</title><script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js'>" + 
+    hashtag_win + "</title><link rel='shortcut icon' href='/users/favicon.png' type='image/png'>" + 
+    "<script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js'>" + 
     "</script><script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js'></script>" + 
     "<script><!--" + 
     "(document).ready(function(){\n" + 
@@ -1071,7 +1112,7 @@ app.get('/hashtag_search_results/:hashtag', function(req, res) {
 
 // X button for administrator to delete Tweat
           if (admin) {
-            no_quote_tweat = noQuoteTweat(myrow_tweat);
+            no_quote_tweat = noQuoteTweat(tweat);
             res.write("&nbsp;&nbsp;<img src='/users/xdel.png' style='position:relative;top:7px' onclick='" + 
               "if (confirm(\"Are you sure you want to delete this Tweat?:\\n  " + no_quote_tweat + 
               "...\")) {window.open(\"/delete_tweat/" + tid + "\");}' />");
@@ -1117,6 +1158,7 @@ app.post('/user_search_results', function(req, res) {
   }
   writeHeadHTML(res);
   res.write("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>User Search Results</title>" +
+    "<link rel='shortcut icon' href='/users/favicon.png' type='image/png'>" +
     "<script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js'></script>" +
     "<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js'></script>" +
     "<script><!--" +
@@ -1218,7 +1260,7 @@ app.post('/user_search_results', function(req, res) {
 app.post('/boolean_search_results', function(req, res) {
 /**
  * Search for other users by any information and interests using a boolean search with 
- * at most two search terms connected by AND, OR or NOT.
+ * at most two search terms connected by boolean AND, OR or NOT as chosen by the user.
  */
   cookies = new Cookies(req, res);
   getFont();  
@@ -1243,6 +1285,7 @@ app.post('/boolean_search_results', function(req, res) {
 
   writeHeadHTML(res);
   res.write("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Boolean Search Results</title>" +
+    "<link rel='shortcut icon' href='/users/favicon.png' type='image/png'>" +
     "<script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js'></script>" +
     "<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js'></script>" +
     "<script><!--" +
@@ -1287,7 +1330,6 @@ app.post('/boolean_search_results', function(req, res) {
   search_one = search_one.replace(/ +/g, " ");
   var search_one_wild = strtran(search_one, '_%', '?*');
   search_one = "% " + search_one + " %";
-
   if (search_two != "") {
     search_two = search_two.substr(0,250).toLowerCase().replace(/-+/g, " ");
     search_two = strtran(search_two, '_%?*', '  _%');
@@ -1639,6 +1681,7 @@ app.get('/change_password', function(req, res) {
   getFont();  
   writeHeadHTML(res);
   res.end("<!DOCTYPE html><html><head><title>Tweater Password Change</title>" +
+    "<link rel='shortcut icon' href='/users/favicon.png' type='image/png'>" +
     "<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css'>" +
     "<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css'>" +
     "<script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js'></script>" +
@@ -1752,7 +1795,8 @@ app.post('/new_password', function(req, res) {
               'A pop-up prompt will appear. Type the word No and click on OK.'});
           }
           writeHeadHTML(res);
-          res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Password Changed!</title></head>" + 
+          res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Password Changed!</title>" +
+            "<link rel='shortcut icon' href='/users/favicon.png' type='image/png'></head>" + 
             "<body style='background-color:#99D9EA;padding:8px;font-family:" + font + ";font-size:" + font_size +
             "px'>Your password has been changed to the new password given. <a href='/'>Please click <b>here</b>" +
             " to return to your Home page.</a></body></html>");
@@ -1771,6 +1815,7 @@ app.get('/new_email_address', function(req, res) {
   getFont();  
   writeHeadHTML(res);
   res.end("<!DOCTYPE html><html><head><title>Tweater New Email Address</title>" +
+    "<link rel='shortcut icon' href='/users/favicon.png' type='image/png'>" +
     "<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css'>" +
     "<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css'>" +
     "<script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js'></script>" +
@@ -1866,7 +1911,8 @@ app.post('/new_email', function(req, res) {
               'A pop-up prompt will appear. Type the word No and click on OK.'});
           }
           writeHeadHTML(res);
-          res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>New Email Address Entered!</title>" + 
+          res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>New Email Address Entered!</title>" +
+            "<link rel='shortcut icon' href='/users/favicon.png' type='image/png'>" + 
             "</head><body style='background-color:#99D9EA;padding:8px;font-family:" + font + ";font-size:" + 
             font_size + "px'>Your email address has been changed to " + email + ". <a onclick='window.close()' " +
             "href='' >Please click <b>here</b> to close this window.</a></body></html>");
@@ -1912,7 +1958,8 @@ app.get('/change_notify/:enable', function(req, res) {
           "href='' >Please click <b>here</b> to close this window.</a></body></html>");
 
       } else {
-        res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Tweat Notifications Changed</title>" + 
+        res.end("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>Tweat Notifications Changed</title>" +
+          "<link rel='shortcut icon' href='/users/favicon.png' type='image/png'>" + 
           "</head><body style='background-color:#99D9EA;padding:8px;font-family:" + font + ";font-size:" +
           font_size + "px'>" + message + " <a onclick='window.close()' " +
           "href='' >Please click <b>here</b> to close this window.</a></body></html>");
@@ -1930,7 +1977,10 @@ app.get('/change_notify/:enable', function(req, res) {
   }
 });
 
-app.get('/user/unsubscribe', function(req, res) { // Process unsubscribe request.
+app.get('/user/unsubscribe', function(req, res) {
+/**
+ * Process request to unsubscribe.
+ */
   cookies = new Cookies(req, res);
   user_name = cookies.get('user_name').trim().replace("%40","@");
   password = cookies.get('password').trim().replace("%40","@");
@@ -1968,7 +2018,9 @@ app.get('/user/unsubscribe', function(req, res) { // Process unsubscribe request
 });
 
 app.get('/delete_listed_user/:uid/:vuname', function(req, res) {
-// Administrator deletes a user account
+/**
+ * Administrator deletes a user account.
+ */
   cookies = new Cookies(req, res);
   user_name = cookies.get('user_name').trim().replace("%40","@");
   password = cookies.get('password').trim().replace("%40","@");
@@ -2012,15 +2064,24 @@ app.get('/delete_listed_user/:uid/:vuname', function(req, res) {
   });
 });
 
-app.get('/:what', function(req, res) { // 404 Page not found
+app.get('/:what', function(req, res) {
+/**
+ * Display 404 Page not found.
+ */
   page_not_found_404(req, res);
 });
 
-app.get('/users/:what', function(req, res) { // 404 Page not found
+app.get('/users/:what', function(req, res) {
+/**
+ * Display 404 Page not found.
+ */
   page_not_found_404(req, res);
 });
 
-app.get('/pictures/:what', function(req, res) { // 404 Page not found
+app.get('/pictures/:what', function(req, res) {
+/**
+ * Display 404 Page not found.
+ */
   page_not_found_404(req, res);
 });
           
@@ -2230,6 +2291,9 @@ function get_home_page(req, res) {
 }
 
 function display_tweats(req, res) {
+/**
+ * Display user's Home page and its Tweats.
+ */
   tweat_list = tweat_list.replace(/%3D/g, "=");
   tweat_list = tweat_list.replace(/%26/g, "&");
   if (stay_logged_in == "on") {
@@ -2399,10 +2463,11 @@ function display_tweats(req, res) {
 '     document.cookie = "user_name=' + user_name + '; expires=" + date.toGMTString() + "; path=/";\n' + 
 '     document.cookie = "password=' + password + '; expires=" + date.toGMTString() + "; path=/";\n' + 
 '     document.cookie = "stay_logged_in=on; expires=" + date.toGMTString() + "; path=/";\n' + 
+'     window.reload();\n' + 
 '   }\n' + 
 '   function staySignedInWithAlert() {\n' + 
+'     window.open("/stay_logged_on");\n' + 
 '     staySignedIn();\n' + 
-'     alert("You will now remain signed in.");\n' + 
 '   }\n' + 
 '  function about() {\n' + 
 '    alert("Tweater is an app created by David K. Crandall, \\nto show his programming skills using Node.js, Ex' + 
@@ -2650,8 +2715,6 @@ TWEATMAXSIZE + ' bytes.)"></input>' +
 function main_init(req, res) {
 /**
  * Initialize user header HTML and user variables from cookies.
- * @param {string} var_name Name of querystring variable.
- * @returns {string} value of querystring variable <var-name>.
  */
 
 // Get various cookies data
@@ -2699,12 +2762,10 @@ function main_init(req, res) {
     shown_limit = SHOWN_LIMIT_INITIAL;
   }
   
-
   browser_name = 'Chrome';
   if (cookies.get('browser_name')) { // Get browser name from cookie
     browser_name = cookies.get('browser_name');
   }
-console.log("Browser:" + browser_name);
 
 // header is menu bar buttons at top of page
   if (browser_name == "Chrome") {
@@ -2770,22 +2831,20 @@ console.log("Browser:" + browser_name);
 '        <button type="submit" class="btn btn-' + chat_button + '" onclick="chatToggle(\'' + chat_toggle + 
 '\')" style="position:relative;left:3px;top:-8px">' + chat_button_action + ' Chat</button>' + 
 '        <input type="hidden" class="form-control" name="name" value="' + esc_name + '"><br /></form>' + 
-'        <form><span style="position:relative;top:-4px">Hashtag Search: #</span><input type="text" ' + 
+'        <form><span style="position:relative;top:-3px">Hashtag Search: #</span><input type="text" ' + 
 'id="hashtag_search" style="font-size:' + font_size + ';width:450px;position:relative;top:-4px" ' + 
 'name="hashtag_search" maxlength="30" placeholder="To search Tweats, type the hashtag here and press--&gt;"' + 
-'</input><button type="button" class="btn btn-primary" onclick="hashtagSearch();" style="margin:2px;' + 
+'</input><button type="submit" class="btn btn-primary" onclick="hashtagSearch();" style="margin:2px;' + 
 'position:relative;top:-3px;left:2px">Hashtag Search</button>&nbsp;' + 
 '        <button type="button" class="btn btn-warning" onclick="shownLimit();" style="position:relative;' + 
 'top:-3px;padding-left:3px;padding-right:3px">Limit ' + shown_limit + '</button>' + 
 '        </span></span><br /></div></fieldset></div></form>' + 
-'        <form action="/user_search_results" method="POST" ' + 
-'role="form" target="_blank" id="user_search_form"><br />' + 
-'        <nobr><span style="position:relative;top:-32px">User Search: </span><textarea ' + 
-'class="textarea inbox" rows="1" cols="75" id="search_any" name="search_any" maxlength="250" ' + 
-' style="font-size:' + font_size + ';position:relative;top:-22px;width:613px" ' + 
-'placeholder="To search by interests, info or names, type them here and press--&gt;"></textarea>&nbsp;' + 
-'<button type="submit" class="btn btn-info" style="position:relative;top:-33px;left:-1px;height:33px">' + 
-'User Search</button></nobr><br /></form><form action="/boolean_search_results/' + status + '" method="POST" role="form" target="_blank"><br />' + 
+'<form action="/user_search_results" method="POST" role="form" target="_blank" id="user_search_form"><br />' +
+'<nobr><span style="position:relative;top:-27px">User Search: </span><input type="text" id="search_any" name="search_any" size="61" maxlength="250" ' +
+'  style="position:relative;top:-28px;height:26px" placeholder="To search by interests, info or names, type them here and press--&gt;" ' +
+'  style="font-size:' + font_size + '"></input>&nbsp;<button type="submit" class="btn btn-info" style="position:relative;top:-27px;left:-1px">User Search</button></nobr><br />' +
+'</form>' +
+'<form action="/boolean_search_results" method="POST" role="form" target="_blank"><br />' + 
 '        <nobr><span style="position:relative;top:-49px;left:-40">Boolean Search: <input type="text" ' + 
 'style="position:relative;width:250px" placeholder="First Search Term" id="search_one" ' + 
 '          name="search_one" maxlength="30" size="26">' + 
@@ -2795,7 +2854,7 @@ console.log("Browser:" + browser_name);
 '                  <option value="NOT">NOT</option>' + 
 '        </select><input type="text" style="position:relative;left:-5px;width:250px" ' + 
 'placeholder="Second Search Term" id="search_two" name="search_two" value="" maxlength="30" size="26">' + 
-'        <button type="submit" class="btn btn-warning" style="position:relative;top:-2px;left:-6px">Boolean ' + 
+'        <button type="submit" class="btn btn-warning" style="position:relative;left:-6px">Boolean ' + 
 'Search</button></span></nobr></form>';
   } else if (browser_name == "MSIE") {
     title_position = "right: -153px;";
@@ -2853,7 +2912,7 @@ console.log("Browser:" + browser_name);
 '<input type="hidden" class="form-control" name="name" value="' + esc_name + '"><br /></form>' +
 '<form><span style="position:relative;top:3px">Hashtag Search: #</span><input type="text" id="hashtag_search" style="font-size:' + font_size + ';width:450px;position:relative;top:5px"' +
 '  name="hashtag_search" maxlength="30" placeholder="To search Tweats, type the hashtag here and press--&gt;"></input>' +
-'  <button type="button" class="btn btn-primary" onclick="hashtagSearch();" style="margin:2px">Hashtag Search</button>&nbsp;' +
+'  <button type="submit" class="btn btn-primary" onclick="hashtagSearch();" style="margin:2px">Hashtag Search</button>&nbsp;' +
 '<button type="button" class="btn btn-warning" onclick="shownLimit();" style="padding-left:3px;padding-right:3px">Limit ' + shown_limit + '</button>' +
 '</span></span><br /></div></fieldset></div></form>' +
 '<form action="/user_search_results" method="POST" role="form" target="_blank" id="user_search_form"><br />' +
@@ -2861,7 +2920,7 @@ console.log("Browser:" + browser_name);
 '  style="position:relative;top:-19px;height:26px" placeholder="To search by interests, info or names, type them here and press--&gt;" ' +
 '  style="font-size:' + font_size + '"></input>&nbsp;<button type="submit" class="btn btn-info" style="position:relative;top:-24px">User Search</button></nobr><br />' +
 '</form>' +
-'<form action="/boolean_search_results/' + status + '" method="POST" role="form" target="_blank"><br />' +
+'<form action="/boolean_search_results" method="POST" role="form" target="_blank"><br />' +
 '<nobr><span style="position:relative;top:-46px">Boolean Search: <input type="text" ' +
 '  style="position:relative;top:3px" placeholder="First Search Term" id="search_one" ' +
 '  name="search_one" maxlength="30" size="26">' +
@@ -2927,7 +2986,7 @@ console.log("Browser:" + browser_name);
 '<input type="hidden" class="form-control" name="name" value="' + esc_name + '"><br /></form>' +
 '<form><span style="position:relative;top:-1px">Hashtag Search: #</span><input type="text" id="hashtag_search" style="font-size:' + font_size + ';width:450px;height:26px"' +
 '  name="hashtag_search" maxlength="30" placeholder="To search Tweats, type the hashtag here and press--&gt;"></input>' +
-'  <button type="button" class="btn btn-primary" onclick="hashtagSearch();" style="margin:2px;position:relative;top:-4px;left:-6px">Hashtag Search</button>&nbsp;' +
+'  <button type="submit" class="btn btn-primary" onclick="hashtagSearch();" style="margin:2px;position:relative;top:-4px;left:-6px">Hashtag Search</button>&nbsp;' +
 '<button type="button" class="btn btn-warning" onclick="shownLimit();" style="position:relative;top:-4px;left:-13px">Limit ' + shown_limit + '</button>' +
 '</span></span><br /></div></fieldset></div></form>' +
 '<form action="/user_search_results" method="POST" role="form" target="_blank" id="user_search_form"><br />' +
@@ -2935,7 +2994,7 @@ console.log("Browser:" + browser_name);
 '  style="position:relative;top:-19px;height:26px" placeholder="To search by interests, info or names, type them here and press--&gt;" ' +
 '  style="font-size:' + font_size + '"></input>&nbsp;<button type="submit" class="btn btn-info" style="position:relative;top:-21px">User Search</button></nobr><br />' +
 '</form>' +
-'<form action="/boolean_search_results/' + status + '" method="POST" role="form" target="_blank"><br />' +
+'<form action="/boolean_search_results" method="POST" role="form" target="_blank"><br />' +
 '<nobr><span style="position:relative;top:-45px;left:-33">Boolean Search: <input type="text" ' +
 '  style="position:relative;top:0px;width:250px;height:26px" placeholder="First Search Term" id="search_one" ' +
 '  name="search_one" maxlength="30" size="26">' +
@@ -3067,9 +3126,10 @@ function password_forgotten(req, res) {
         }
 
 // Display password reset page with Turing test
-        res.write('<!DOCTYPE html><html><head><title>Password Reset</title>' + SCRIPTS_EXTERNAL + turing + 
-'</head><body style="background-color:#99D9EA;padding:8px;' + 'font-family:' + font + ';font-size:' + 
-font_size + 'px" onload="turingsetup();">' + header);
+        res.write('<!DOCTYPE html><html><head><title>Password Reset</title>' + 
+          '<link rel="shortcut icon" href="/users/favicon.png" type="image/png">' + SCRIPTS_EXTERNAL + turing + 
+          '</head><body style="background-color:#99D9EA;padding:8px;' + 'font-family:' + font + ';font-size:' + 
+          font_size + 'px" onload="turingsetup();">' + header);
 
 // Enter password reset code and choose new password
         res.end('<img src="/users/tweatyquestion.png" style="float:right" />' + 
@@ -3201,6 +3261,7 @@ function page_not_found_404(req, res) {
   } finally {
   res.writeHead(404, {'Content-Type': 'text/html' }); // 404
   res.end("<!DOCTYPE html><html><head><title>Error 404 Page Not Found</title>" + 
+"<link rel='shortcut icon' href='/users/favicon.png' type='image/png'>" + 
 "<body style='background-color:#99D9EA;color:black;font-size:" + font_size + "px'>" + 
 "<a href='" + SELF_NAME + "' style='font-size:" + bigfont + 
 "px;'><div>&nbsp;404 Error: Tweater Page Not Found!&nbsp;<br />" + 
@@ -3210,7 +3271,10 @@ function page_not_found_404(req, res) {
   }
 }
 
-function show_home_page(req, res) { // Display signed-in user's Home page
+function show_home_page(req, res) {
+/**
+ * Display signed-in user's Home page.
+ */
   title_position = "right: -77px;";
   sign_in_width = "width:506px;";
   margin_left = "margin-left: -43px;";
@@ -3220,6 +3284,9 @@ function show_home_page(req, res) { // Display signed-in user's Home page
 }
 
 function sign_in_or_register(req, res, message) {
+/**
+ * Display page for signing in or registering.
+ */
   cookies = new Cookies(req, res);
   main_init(req, res); // Initialize main variables and also data from cookies
   if (message) {
@@ -3231,7 +3298,8 @@ function sign_in_or_register(req, res, message) {
     email = "";
   }
   writeHeadHTML(res);
-  res.end('<!DOCTYPE html><html><head><title>Tweater</title>' + SCRIPTS_EXTERNAL + turing +
+  res.end('<!DOCTYPE html><html><head><title>Tweater</title>' + 
+'<link rel="shortcut icon" href="/users/favicon.png" type="image/png">' + SCRIPTS_EXTERNAL + turing +
 '<SCRIPT LANGUAGE="JavaScript">' + 
 '  function URLsetup() {' + 
 '    document.getElementById("action").action = "' + SELF_NAME + '?user_name=" + ' + 
@@ -3322,6 +3390,9 @@ function sign_in_or_register(req, res, message) {
 }
 
 function upload_picture_uploading(req, res) {
+/**
+ * Upload, rename and move picture and delete old picture if any.
+ */
   cookies = new Cookies(req, res);
   if (cookies.get('user_name') && cookies.get('password')) {
     var given_user_name = cookies.get('user_name').replace("%40","@");
@@ -3380,7 +3451,7 @@ function upload_picture_uploading(req, res) {
                 if (results.length) {
                   if (results[0]['picture_ext']) {
                     var old_filename = __dirname + "/pictures/" + results[0]['id'] + "." + results[0]['picture_ext'];
-                    fs.unlink(old_filename, function (err, results, fields) {
+                    fs.unlink(old_filename, function (err, results, fields) { // Delete old picture
                     });
 
                   }
@@ -3400,8 +3471,8 @@ function upload_picture_uploading(req, res) {
                         } else {
                           message = "Picture uploaded! To see the new picture, go back to your home page an" + 
                             "d click on your browser's Refresh button or click on Home at the top left. Not" + 
-                            "e: You can also post URLs of pictures that start with \\\"http\\\". After typing o" + 
-                            "r pasting the URL in the Tweat textbox, click the Pic button and press Enter.";
+                            "e: You can also post URLs of pictures that start with \\\"http\\\". After typing " + 
+                            "or pasting the URL in the Tweat textbox, click the Pic button and press Enter.";
                           writeHeadHTML(res);
                           res.end("<!DOCTYPE HTML><HTML><head><script>" + 
                             "alert(\"" + message + "\"); window.close();</script></head><body></body></html>");
@@ -3438,8 +3509,12 @@ function upload_picture_uploading(req, res) {
 }
 
 function all_users_display(req, res) {
+/**
+ * Display list of all users.
+ */
   writeHeadHTML(res);
   res.write("<!DOCTYPE html><html><head><meta charset='utf-8' /><title>All Users Search Results</title>" +
+    "<link rel='shortcut icon' href='/users/favicon.png' type='image/png'>" +
     "<script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js'></script>" +
     "<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js'></script>" +
     "<script><!--" +
@@ -3485,7 +3560,9 @@ function all_users_display(req, res) {
 }
 
 function chat_setup() {
-// Adjust Chat Mode start/stop button and its action
+/**
+ * Adjust Chat Mode start/stop button and its action.
+ */
   chat = 'false';
   if (cookies.get('chat')) { // Chat mode refreshes Tweat display every 10 seconds for real-time conversation
     chat = cookies.get('chat');
@@ -3502,14 +3579,25 @@ function chat_setup() {
 }
 
 function passwordHash(password) {
+/**
+ * Initialize user header HTML and user variables from cookies.
+ * @param {string} password Password given.
+ * @returns {string} password hash of password given.
+ */
   return crypto.createHmac("MD5", CRYPT_SALT).update(password).digest("base64");
 }
 
 function writeHeadHTML(res) {
+/**
+ * Write HTML header.
+ */
   res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8' });
 }
 
 function getFont() {
+/**
+ * Get font information from cookies or default values.
+ */
   if (cookies.get('font_size')) {
     font_size = cookies.get('font_size');
   } else {
@@ -3524,17 +3612,14 @@ function getFont() {
 }
 
 function noQuoteTweat(tweat) {
-//*** chain replaces
-  var no_quote = tweat.substr(0,80).replace('"', ' ');
-  no_quote = no_quote.replace(/'/g, "&apos;");
-  no_quote = no_quote.replace(/"/g, "&apos;&apos;");
-  no_quote = no_quote.replace(/\t/g, " ");
-  no_quote = no_quote.replace(/\n/g, " ");
-  no_quote = no_quote.replace(/\r/g, " ");
-  no_quote = no_quote.replace(/\f/g, " ");
-  no_quote = no_quote.replace(/</g, "&lt;");
-  return no_quote.replace(/>/g, "&gt;");
+/**
+ * Convert Tweat to version to be displayed in popup prompt.
+ */
+  return tweat.substr(0,80).replace(/'/g, "&apos;").replace(/"/g, "&apos;&apos;").replace(/\t/g, " ").replace(/\n/g, " ").replace(/\r/g, " ").replace(/\f/g, " ").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+/**
+ * Begin listening to port.
+ */
 app.listen(port);
 console.log("Tweater Node.js version 1.0 started.");
