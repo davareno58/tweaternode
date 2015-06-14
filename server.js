@@ -25,13 +25,13 @@
  * @constant {string} USERNAME Database username.
  */
 CRYPT_SALT = 'x';
-DATABASE_HOST = '192.168.0.3';
-DATABASE_NAME = "my_crandall";
+DATABASE_HOST = 'my-tweater.rhcloud.com';
+DATABASE_NAME = "my";
 DATABASE_TABLE = "users";
 EMAIL_PASSWORD = 'y';
 FONT_INITIAL = "Helvetica";
 FONTSIZE = "18"; // pixels
-MY_PATH = 'c:/users/dave/node/tweater_node';
+MY_PATH = '/';
 PASSWORD = 'z'; // Database password
 SELF_NAME = "/";
 SHOWN_LIMIT_INITIAL = 50;
