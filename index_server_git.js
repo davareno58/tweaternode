@@ -26,7 +26,7 @@
  */
 CRYPT_SALT = 'x';
 DATABASE_HOST = 'my-tweater.rhcloud.com';
-DATABASE_NAME = "my_crandall";
+DATABASE_NAME = "my";
 DATABASE_TABLE = "users";
 EMAIL_PASSWORD = 'y';
 FONT_INITIAL = "Helvetica";
