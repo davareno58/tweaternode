@@ -817,12 +817,12 @@ app.post("/info_update", function(req, res) {
 // Build list of old interests for deleting and list of new interests for adding
             old_interests = row_interests.toLowerCase().substr(0, 250).replace("-", " ");
             old_interests = strtran(old_interests, '!"#%&()*+,-./:;<=>?[\]^_`{|}~' + 
-            '¡¦©«¬­®¯´¶¸»¿', '                                                  ' + 
+            'Â¡Â¦Â©Â«Â¬Â­Â®Â¯Â´Â¶Â¸Â»Â¿', '                                                  ' + 
             '                                       ').trim();
         
             new_interests = interests.toLowerCase().substr(0, 250).replace("-", " ");
             new_interests = strtran(new_interests, '!"#%&()*+,-./:;<=>?[\]^_`{|}~' + 
-            '¡¦©«¬­®¯´¶¸»¿', '                                                  ' + 
+            'Â¡Â¦Â©Â«Â¬Â­Â®Â¯Â´Â¶Â¸Â»Â¿', '                                                  ' + 
             '                                       ').trim();
         
             old_interests = old_interests.replace("   ", " ");
@@ -1325,7 +1325,7 @@ app.post('/boolean_search_results', function(req, res) {
   }
   search_one = search_one.substr(0,250).toLowerCase().replace(/-+/g, " ");
   search_one = strtran(search_one, '_%?*', '  _%');
-  search_one = strtran(search_one.trim(), '"(),-/:;<=>[]!^\`{|}~¡¦©«¬­®¯´¶¸»¿', '                        ' + 
+  search_one = strtran(search_one.trim(), '"(),-/:;<=>[]!^\`{|}~Â¡Â¦Â©Â«Â¬Â­Â®Â¯Â´Â¶Â¸Â»Â¿', '                        ' + 
     '                  ');
   search_one = search_one.replace(/ +/g, " ");
   var search_one_wild = strtran(search_one, '_%', '?*');
@@ -1333,7 +1333,7 @@ app.post('/boolean_search_results', function(req, res) {
   if (search_two != "") {
     search_two = search_two.substr(0,250).toLowerCase().replace(/-+/g, " ");
     search_two = strtran(search_two, '_%?*', '  _%');
-    search_two = strtran(search_two.trim(), '"(),-/:;<=>[]!^\`{|}~¡¦©«¬­®¯´¶¸»¿', '                        ' + 
+    search_two = strtran(search_two.trim(), '"(),-/:;<=>[]!^\`{|}~Â¡Â¦Â©Â«Â¬Â­Â®Â¯Â´Â¶Â¸Â»Â¿', '                        ' + 
       '                  ');
     search_two = search_two.replace(/ +/g, " ");
     var search_two_wild = strtran(search_two, '_%', '?*');
