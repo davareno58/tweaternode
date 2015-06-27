@@ -25,13 +25,13 @@
  * @constant {string} USERNAME Database username.
  */
 CRYPT_SALT = 'x';
-DATABASE_HOST = 'my-tweater.rhcloud.com';
-DATABASE_NAME = "my";
+DATABASE_HOST = '192.168.0.3';
+DATABASE_NAME = "my_crandall";
 DATABASE_TABLE = "users";
 EMAIL_PASSWORD = 'y';
 FONT_INITIAL = "Helvetica";
 FONTSIZE = "18"; // pixels
-MY_PATH = '/';
+MY_PATH = 'c:/users/dave/node/tweater_node';
 PASSWORD = 'z'; // Database password
 SELF_NAME = "/";
 SHOWN_LIMIT_INITIAL = 50;
@@ -654,10 +654,19 @@ app.post('/post_tweat', function(req, res) {
 
   if (tweat) {
     cookies = new Cookies(req, res);
-    var date = new Date();
-    res.cookie("chat_timeout", (date.getTime() + 300000));
-    writeHeadHTML(res);
-    post_tweat(req, res);
+    user_name = cookies.get('user_name').replace("%40","@");
+    password = cookies.get('password').replace("%40","@");
+    password_hash = passwordHash(password);
+    user = _.find(users, function(u) {
+      return ((u.user_name == user_name) && (u.password_hash == password_hash));
+    });
+    if (user) {
+      name = user.name;
+      var date = new Date();
+      res.cookie("chat_timeout", (date.getTime() + 300000));
+      writeHeadHTML(res);
+      post_tweat(req, res);
+    }
   }
   message = "";
   return;
@@ -817,12 +826,12 @@ app.post("/info_update", function(req, res) {
 // Build list of old interests for deleting and list of new interests for adding
             old_interests = row_interests.toLowerCase().substr(0, 250).replace("-", " ");
             old_interests = strtran(old_interests, '!"#%&()*+,-./:;<=>?[\]^_`{|}~' + 
-            'Â¡Â¦Â©Â«Â¬Â­Â®Â¯Â´Â¶Â¸Â»Â¿', '                                                  ' + 
+            '¡¦©«¬­®¯´¶¸»¿', '                                                  ' + 
             '                                       ').trim();
         
             new_interests = interests.toLowerCase().substr(0, 250).replace("-", " ");
             new_interests = strtran(new_interests, '!"#%&()*+,-./:;<=>?[\]^_`{|}~' + 
-            'Â¡Â¦Â©Â«Â¬Â­Â®Â¯Â´Â¶Â¸Â»Â¿', '                                                  ' + 
+            '¡¦©«¬­®¯´¶¸»¿', '                                                  ' + 
             '                                       ').trim();
         
             old_interests = old_interests.replace("   ", " ");
@@ -1325,7 +1334,7 @@ app.post('/boolean_search_results', function(req, res) {
   }
   search_one = search_one.substr(0,250).toLowerCase().replace(/-+/g, " ");
   search_one = strtran(search_one, '_%?*', '  _%');
-  search_one = strtran(search_one.trim(), '"(),-/:;<=>[]!^\`{|}~Â¡Â¦Â©Â«Â¬Â­Â®Â¯Â´Â¶Â¸Â»Â¿', '                        ' + 
+  search_one = strtran(search_one.trim(), '"(),-/:;<=>[]!^\`{|}~¡¦©«¬­®¯´¶¸»¿', '                        ' + 
     '                  ');
   search_one = search_one.replace(/ +/g, " ");
   var search_one_wild = strtran(search_one, '_%', '?*');
@@ -1333,7 +1342,7 @@ app.post('/boolean_search_results', function(req, res) {
   if (search_two != "") {
     search_two = search_two.substr(0,250).toLowerCase().replace(/-+/g, " ");
     search_two = strtran(search_two, '_%?*', '  _%');
-    search_two = strtran(search_two.trim(), '"(),-/:;<=>[]!^\`{|}~Â¡Â¦Â©Â«Â¬Â­Â®Â¯Â´Â¶Â¸Â»Â¿', '                        ' + 
+    search_two = strtran(search_two.trim(), '"(),-/:;<=>[]!^\`{|}~¡¦©«¬­®¯´¶¸»¿', '                        ' + 
       '                  ');
     search_two = search_two.replace(/ +/g, " ");
     var search_two_wild = strtran(search_two, '_%', '?*');
@@ -2179,7 +2188,7 @@ function get_home_page(req, res) {
 
       main_init(req, res); // Initialize user header HTML and user variables from cookies
    
-      status="";
+      status = "";
       unsubscribe_password = passwordHash(password);
       if (message) {
         formatted_message = '<div class="container" style="position:relative;top:-20px;margin:0px;padding:0px;' + 
