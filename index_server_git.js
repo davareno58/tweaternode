@@ -1,5 +1,3 @@
-// Move js msgs from a new page to same page & put resulting msg in red on reloaded home page like info updated.
-// To do: chat & non-chat w/ 2 computers; DRY: more functions. More comments.
 
 /**
  * @fileOverview Tweater Twitter-like social media application.
@@ -826,12 +824,12 @@ app.post("/info_update", function(req, res) {
 // Build list of old interests for deleting and list of new interests for adding
             old_interests = row_interests.toLowerCase().substr(0, 250).replace("-", " ");
             old_interests = strtran(old_interests, '!"#%&()*+,-./:;<=>?[\]^_`{|}~' + 
-            '¡¦©«¬­®¯´¶¸»¿', '                                                  ' + 
+            'Â¡Â¦Â©Â«Â¬Â­Â®Â¯Â´Â¶Â¸Â»Â¿', '                                                  ' + 
             '                                       ').trim();
         
             new_interests = interests.toLowerCase().substr(0, 250).replace("-", " ");
             new_interests = strtran(new_interests, '!"#%&()*+,-./:;<=>?[\]^_`{|}~' + 
-            '¡¦©«¬­®¯´¶¸»¿', '                                                  ' + 
+            'Â¡Â¦Â©Â«Â¬Â­Â®Â¯Â´Â¶Â¸Â»Â¿', '                                                  ' + 
             '                                       ').trim();
         
             old_interests = old_interests.replace("   ", " ");
@@ -1226,7 +1224,7 @@ app.post('/user_search_results', function(req, res) {
               "a:hlink{color:#000099};' href='/view_user_name/" + vuname + 
               "' target='_blank'>" + vname +
               " (Username: " + vuname + ")</a>");
-// X button for administrator to delete Tweat
+// X button for administrator to delete user
             if (admin) {
               res.write("&nbsp;&nbsp;<img src='/users/xdel.png' class='user' onclick='if (confirm(\"Are you " +
                 "sure you want to delete this user?:\\n  " + vname + " (Username: " + vuname + "; User ID: " +
@@ -1334,7 +1332,7 @@ app.post('/boolean_search_results', function(req, res) {
   }
   search_one = search_one.substr(0,250).toLowerCase().replace(/-+/g, " ");
   search_one = strtran(search_one, '_%?*', '  _%');
-  search_one = strtran(search_one.trim(), '"(),-/:;<=>[]!^\`{|}~¡¦©«¬­®¯´¶¸»¿', '                        ' + 
+  search_one = strtran(search_one.trim(), '"(),-/:;<=>[]!^\`{|}~Â¡Â¦Â©Â«Â¬Â­Â®Â¯Â´Â¶Â¸Â»Â¿', '                        ' + 
     '                  ');
   search_one = search_one.replace(/ +/g, " ");
   var search_one_wild = strtran(search_one, '_%', '?*');
@@ -1342,7 +1340,7 @@ app.post('/boolean_search_results', function(req, res) {
   if (search_two != "") {
     search_two = search_two.substr(0,250).toLowerCase().replace(/-+/g, " ");
     search_two = strtran(search_two, '_%?*', '  _%');
-    search_two = strtran(search_two.trim(), '"(),-/:;<=>[]!^\`{|}~¡¦©«¬­®¯´¶¸»¿', '                        ' + 
+    search_two = strtran(search_two.trim(), '"(),-/:;<=>[]!^\`{|}~Â¡Â¦Â©Â«Â¬Â­Â®Â¯Â´Â¶Â¸Â»Â¿', '                        ' + 
       '                  ');
     search_two = search_two.replace(/ +/g, " ");
     var search_two_wild = strtran(search_two, '_%', '?*');
